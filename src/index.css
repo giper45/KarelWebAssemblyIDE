@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+h1 {
+    @apply text-4xl font-bold mt-8 mb-4;
+}
+
+h2 {
+    @apply text-3xl font-semibold mt-6 mb-3;
+}
+
+h3 {
+    @apply text-2xl font-semibold mt-4 mb-2;
+}
+
+h4 {
+    @apply text-xl font-medium mt-3 mb-1.5;
+}
+
+h5 {
+    @apply text-lg font-medium mt-2 mb-1;
+}
+
+h6 {
+    @apply text-base font-medium mt-1 mb-0.5;
+}

@@ -1,0 +1,48 @@
+export const initialProgram = `#include "karel.h"
+
+// Variabili globali di Karel
+Karel karel;
+const char* DIRECTION_NAMES[] = {"Est", "Nord", "Ovest", "Sud"};
+
+void setup() {
+    // Inizializza Karel e il mondo
+    karel_init();
+    
+    // Aggiungi alcuni beeper nel mondo
+    karel_add_beeper(3, 2);
+    karel_add_beeper(5, 4);
+    karel_add_beeper(7, 3);
+    karel_add_beeper(2, 6);
+}
+
+void loop(double timeSec, double elapsedSec) {
+    // Cancella il canvas
+    canvas_setFillStyleZ("white");
+    canvas_fillRect(0, 0, 800, 600);
+    
+    // Disegna il mondo di Karel
+    drawGrid();
+    drawBeepers();
+    drawKarel();
+    drawInfo();
+    
+    // Logica di Karel - Muoviti e raccogli beeper!
+    static double lastMoveTime = 0;
+    if(timeSec - lastMoveTime > 1.0) {
+        
+        // Se c'è un beeper, raccoglilo
+        if(beepers_present()) {
+            karel_pick_beeper();
+        }
+        
+        // Se puoi andare avanti, vai
+        if(front_is_clear()) {
+            karel_move();
+        } else {
+            // Altrimenti gira a sinistra
+            karel_turn_left();
+        }
+        
+        lastMoveTime = timeSec;
+    }
+}`
