@@ -78,6 +78,8 @@ export const useExerciseData = () => {
   }
 
   const getExercise = (exerciseId) => {
+    console.log("GET EXERCISE")
+    console.log(exercises)
     return exercises[exerciseId] || null
   }
 

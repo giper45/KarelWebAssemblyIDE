@@ -96,6 +96,8 @@ function App() {
   // Stato per sidebar e esercizio corrente
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [currentExerciseId, setCurrentExerciseId] = useState(1);
+  // Ottieni l'esercizio corrente solo se i dati sono caricati
+  const currentExercise = !loading ? getExercise(currentExerciseId) : null;
 
   // Quando selezioni un esercizio dalla sidebar
   const handleExerciseSelect = (exercise) => {
@@ -124,7 +126,8 @@ function App() {
   // Remove the local canvasRef, accept it as a prop instead
   // Remove this line: const canvasRef = useRef(null);
   useEffect(() => {
-      if (canvasRef.current) {
+        if (!loading && canvasRef.current && currentExercise) {
+      // if (canvasRef.current) {
       const canvas = canvasRef.current
       canvas.width = 800
       canvas.height = 600
@@ -135,7 +138,7 @@ function App() {
       
       setTerminalOutput(prev => prev + 'Canvas initialized.\n')
       }
-  }, [])
+  }, [loading, canvasRef, currentExercise])
 
 
   // Inizializza ACE Editor
@@ -410,8 +413,6 @@ function App() {
   }
 
 
-  // Ottieni l'esercizio corrente solo se i dati sono caricati
-  const currentExercise = !loading ? getExercise(currentExerciseId) : null;
   return (
     <div id="all" className="h-screen bg-gray-50 flex flex-col">
       {/* Input file nascosto */}
