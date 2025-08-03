@@ -1,0 +1,8 @@
+{
+  "id": 1,
+  "name": "Karel First Steps",
+  "description": "Learn Karel's basic movement and navigation. Practice moving forward and turning left while avoiding walls.",
+  "category": "basic-movement",
+  "difficulty": "Easy",
+  "estimatedTime": "15 minutes"
+}

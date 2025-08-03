@@ -132,3 +132,4 @@ This project is open source and available under the [MIT License](LICENSE).
 - Built on the WebAssembly compiler infrastructure by [@binji](https://github.com/binji)
 - Inspired by Stanford's Karel programming environment
 - Uses modern web technologies to make programming education accessible
+- Copilot Pro from my educational account makes this project really easier to be implemented. Thank you very much for GitHub Education plan!. 

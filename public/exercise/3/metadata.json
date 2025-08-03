@@ -1,0 +1,8 @@
+{
+  "id": 3,
+  "name": "Karel Square Path",
+  "description": "Make Karel walk in a perfect square pattern using movement and turning commands.",
+  "category": "basic-movement",
+  "difficulty": "Easy",
+  "estimatedTime": "15 minutes"
+}

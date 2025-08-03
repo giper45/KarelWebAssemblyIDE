@@ -1,0 +1,8 @@
+{
+  "id": 2,
+  "name": "Navigate to Corner",
+  "description": "Guide Karel to reach the top-right corner of the world using only movement commands.",
+  "category": "basic-movement",
+  "difficulty": "Easy",
+  "estimatedTime": "20 minutes"
+}
