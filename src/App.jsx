@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import './App.css'
 import { Toolbar, Terminal, Sidebar, Title, Footer } from './components'
+import { useExerciseData } from './hooks/useExerciseData';
 import LoadingSpinner from './components/LoadingSpinner'
 import TabComponent from './components/TabComponent';
 import IsRunningButton from './components/IsRunningButton';
@@ -83,32 +84,42 @@ function App() {
   const apiRef = useRef(null)
 
 
-  const [currentExercise, setCurrentExercise] = useState({
-    id: 1,
-    name: "Karel Basic Movement",
-    difficulty: "Easy",
-    status: "in-progress"
-  })
+   const {
+    categories,
+    exercises,
+    loading,
+    error,
+    getExercisesByCategory,
+    getExercise
+  } = useExerciseData();
 
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  // Stato per sidebar e esercizio corrente
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [currentExerciseId, setCurrentExerciseId] = useState(1);
 
-
+  // Quando selezioni un esercizio dalla sidebar
   const handleExerciseSelect = (exercise) => {
-    setCurrentExercise(exercise)
-    setIsSidebarOpen(false) // Chiudi sidebar su mobile dopo selezione
-    
-    // Qui potresti caricare il codice specifico dell'esercizio
-    // setCode(getExerciseCode(exercise.id))
-    // if (window.editor) {
-    //   window.editor.setValue(getExerciseCode(exercise.id), -1)
-    // }
-  }
+    setCurrentExerciseId(exercise.id);
+    setIsSidebarOpen(false);
+    // Qui puoi anche caricare il codice nell'editor, ecc.
+  };
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen)
   }
 
   const canvasRef = useRef(null);
+    // Aggiorna il codice quando cambia l'esercizio e i dati sono caricati
+  useEffect(() => {
+    if (!loading) {
+      const exercise = getExercise(currentExerciseId);
+      if (exercise && exercise.exerciseCode) {
+        setCode(exercise.exerciseCode);
+      }
+    }
+  }, [currentExerciseId, loading, getExercise, canvasRef]);
+
+  // ...resto del tuo stato e logica
 
   // Remove the local canvasRef, accept it as a prop instead
   // Remove this line: const canvasRef = useRef(null);
@@ -398,6 +409,9 @@ function App() {
     }
   }
 
+
+  // Ottieni l'esercizio corrente solo se i dati sono caricati
+  const currentExercise = !loading ? getExercise(currentExerciseId) : null;
   return (
     <div id="all" className="h-screen bg-gray-50 flex flex-col">
       {/* Input file nascosto */}
@@ -412,7 +426,7 @@ function App() {
       <Sidebar
         isOpen={isSidebarOpen}
         onToggle={toggleSidebar}
-        currentExercise={currentExercise}
+        currentExerciseId={currentExerciseId}
         onExerciseSelect={handleExerciseSelect}
       />
 
@@ -434,7 +448,10 @@ function App() {
 
 
 
+      {loading && <div>Caricamento esercizi...</div>}
       {/* Title Section */}
+      {!loading && currentExercise && (
+      <div>
       <Title
         exerciseName={currentExercise.name}
         difficulty={currentExercise.difficulty}
@@ -483,6 +500,8 @@ function App() {
           </div>
         </div>
       </div>
+      </div>
+      )}
       <Footer />
 
     </div>

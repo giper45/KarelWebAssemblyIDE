@@ -5,6 +5,7 @@ const Sidebar = ({ isOpen, onExerciseSelect, currentExerciseId }) => {
   const { categories, loading, error, getExercisesByCategory } = useExerciseData();
   const [expandedCategories, setExpandedCategories] = useState(new Set(['basic-movement']));
 
+
   const toggleCategory = (categoryId) => {
     setExpandedCategories(prev => {
       const newSet = new Set(prev);
