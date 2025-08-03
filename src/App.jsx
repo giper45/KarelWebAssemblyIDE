@@ -492,6 +492,7 @@ function App() {
             <TabComponent
               terminalOutput={terminalOutput}
               canvasRef={canvasRef}
+              readme={currentExercise.readme}
             />
 
             {/* Status Indicator */}

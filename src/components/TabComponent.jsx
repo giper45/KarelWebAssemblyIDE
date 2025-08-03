@@ -10,7 +10,8 @@ import React, { useState } from "react";
 
 function TabComponent({
   terminalOutput,
-  canvasRef
+  canvasRef,
+  readme
 }) {
   const [activeTab, setActiveTab] = useState('readme');
 
@@ -54,7 +55,10 @@ function TabComponent({
       {/* <div className="p-4"> */}
       <div className="p-4 h-[calc(100%-3.5rem)] overflow-auto relative">
         <div className={activeTab === 'readme' ? '' : 'hidden'}>
-          <MarkdownReader />
+          <MarkdownReader 
+            markdownContent={readme}
+          
+          />
         </div>
         <div className={activeTab === 'world' ? '' : 'hidden'}>
           <CanvasPanel canvasRef={canvasRef} />
