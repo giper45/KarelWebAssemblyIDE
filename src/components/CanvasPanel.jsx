@@ -5,7 +5,7 @@ const CanvasPanel = ({
     isActive
 }) => {
     return (
-        <div class="w-full min-h-full">
+        <div className="w-full min-h-full">
             <div className={!isActive ? "h-full" : "hidden h-full"}>
                 <div className="w-full h-full bg-gray-50 flex items-center justify-center">
                     <div className="text-center h-full">

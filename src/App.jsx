@@ -102,6 +102,7 @@ function App() {
 
   // Quando selezioni un esercizio dalla sidebar
   const handleExerciseSelect = (exercise) => {
+    console.log("Handle Exercise Select");
     setCurrentExercise(exercise);
     // setCurrentExerciseId(exercise.id);
     setIsSidebarOpen(false);
@@ -143,12 +144,8 @@ function App() {
 
 
   useEffect(() => {
-    console.log("Current exercise: ", currentExercise)
-    console.log(editorRef)
-    console.log(window.ace)
     if (editorRef && editorRef.current && currentExercise && window.ace) {
       const editor = window.ace.edit(editorRef.current)
-      console.log("Set editor value: ", currentExercise.exerciseCode)
       editor.setValue(currentExercise.exerciseCode, -1)
     }
   }, [currentExercise, editorRef, window.ace])
@@ -223,6 +220,8 @@ function App() {
               showLineNumbers: true,
               fontSize: 18,
               wrap: true,
+              maxLines: Infinity,
+              autoScrollEditorIntoView: true,
               showPrintMargin: false
             })
 
@@ -427,18 +426,42 @@ function App() {
   }
 
   const resetLayout = () => {
-    if (confirm('Really reset?')) {
-      // TO IMPLEMENT
+    // if (confirm('Really reset?')) {
       // setCode(initialProgram)
-      console.log(apiRef.current)
       setTerminalOutput('');
       setIsActive(false);
       // if (window.editor) {
       //   window.editor.setValue(initialProgram, -1)
       // }
       apiRef.current.stop();
-    }
+    // }
   }
+
+
+  const handlePreviousExercise = () => {
+    const currentIndex = currentExercise.id;
+    if (currentIndex > 0) {
+      const previousExercise = exercises[currentIndex - 1];
+      handleExerciseSelect(previousExercise);
+    }
+  };
+
+  const handleNextExercise = () => {
+    const currentIndex = currentExercise.id;
+    const nextExercise = exercises[currentIndex + 1];
+    handleExerciseSelect(nextExercise);
+  };
+
+  // Verifica se ci sono esercizi precedenti/successivi
+  const hasPreviousExercise = () => {
+    const currentIndex = currentExercise.id;
+    return currentIndex > 1;
+  };
+
+  const hasNextExercise = () => {
+    const currentIndex = currentExercise.id;
+    return currentIndex < Object.keys(exercises).length - 1;
+  };
 
 
   return (
@@ -494,6 +517,7 @@ function App() {
           {/* IDE Controls Row */}
           <IdeControls
             isRunning={isRunning}
+            isActive={isActive}
             onRun={run}
             onOpenFile={handleOpenFileClick}
             keyboard={keyboard}
@@ -503,10 +527,14 @@ function App() {
             onReset={resetLayout}
             theme={theme}
             onThemeChange={setTheme}
+            onPrevious={handlePreviousExercise}
+            onNext={handleNextExercise}
+            hasPrevious={hasPreviousExercise()}
+            hasNext={hasNextExercise()}
           />
 
           {/* Layout principale */}
-          <div className="flex flex-1 h-full min-h-0">
+          <div className="flex flex-1 h-full min-h-0 overlow-y-auto">
 
             {/* Top row: Editor + Canvas */}
               {/* Editor */}
