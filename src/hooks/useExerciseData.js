@@ -63,6 +63,7 @@ export const useExerciseData = () => {
       setError(err.message)
       console.error('Failed to load exercise data:', err)
     } finally {
+      console.log("CONCLUDED")
       setLoading(false)
     }
   }

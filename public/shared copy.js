@@ -804,6 +804,7 @@ class API {
     const instantiate = +new Date();
     const stillRunning = await app.run();
     const end = +new Date();
+    this.currentApp = null; // Clear reference when execution completes
     this.hostWrite('\n');
     if (this.showTiming) {
       const green = '\x1b[92m';
@@ -823,11 +824,15 @@ class API {
       this.currentApp.proc_exit(1); // Force exit with error code
       this.currentApp = null;
     }
-    else {
-      console.log("NO current app to stop.");
-    }
   }
 
+  // Add method to cleanly exit with specific code
+  proc_exit(code = 0) {
+    if (this.currentApp) {
+      this.currentApp.proc_exit(code);
+      this.currentApp = null;
+    }
+  }
 
   async compileLinkRun(contents) {
     const input = `test.cc`;

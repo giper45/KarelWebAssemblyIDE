@@ -1,8 +1,16 @@
 import React, { useState } from 'react';
 import { useExerciseData } from '../hooks/useExerciseData';
 
-const Sidebar = ({ isOpen, onExerciseSelect, currentExerciseId }) => {
-  const { categories, loading, error, getExercisesByCategory } = useExerciseData();
+const Sidebar = ({ 
+  isOpen, 
+  onExerciseSelect, 
+  currentExerciseId, 
+  categories, 
+  loading, 
+  error, 
+  getExercisesByCategory
+}) => {
+  // const { categories, loading, error, getExercisesByCategory } = useExerciseData();
   const [expandedCategories, setExpandedCategories] = useState(new Set(['basic-movement']));
 
 
