@@ -7,6 +7,21 @@
 #include <string.h>
 #include <stdlib.h>
 
+// Auto-flush printf for real-time output in WebAssembly
+#ifdef __EMSCRIPTEN__
+    #define printf(...) do { printf(__VA_ARGS__); fflush(stdout); } while(0)
+#elif defined(__wasm__) || defined(__wasm32__)
+    #define printf(...) do { printf(__VA_ARGS__); fflush(stdout); } while(0)
+#endif
+
+static inline void karel_printf(const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+    vprintf(format, args);
+    va_end(args);
+    fflush(stdout);
+}
+
 // Configurazione del mondo di Karel
 #define WORLD_WIDTH 10
 #define WORLD_HEIGHT 8
