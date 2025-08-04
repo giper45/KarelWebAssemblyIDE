@@ -16,8 +16,5 @@ export default defineConfig({
       overlay: false
     }
   },
-  headers: {
-    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0'
-  },
 
 });
