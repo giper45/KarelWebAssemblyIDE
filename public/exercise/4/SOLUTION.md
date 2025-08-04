@@ -1,76 +1,78 @@
 # Solution: Collect All Beepers
 
 ## Solution Explanation
-This exercise requires systematic world exploration combined with beeper detection and collection.
-
-## Complete Solution
+This exercise teaches conditional logic and safe movement by requiring Karel to collect scattered beepers while avoiding runtime errors.
 ```c
-void loop(double timeSec, double elapsedSec) {
-    draw();
+void studentCode() {
+    drawWorld();
     
-    static double lastMoveTime = 0;
-    static int beepersCollected = 0;
-    const int totalBeepers = 6;
+    static bool missionComplete = false;
+    static int totalCollected = 0;
     
-    if (beepersCollected >= totalBeepers) {
-        printf("Mission Complete! All beepers collected!");
-        return;
-    }
-    
-    if (timeSec - lastMoveTime > 0.6) {
-        // Always check for beepers first
+    if (!missionComplete) {
+        // Collect beeper if present
         if (beepers_present()) {
             karel_pick_beeper();
-            beepersCollected++;
-            printf("Found beeper! Total: %d/%d", beepersCollected, totalBeepers);
+            totalCollected++;
+            printf("Beeper #%d collected!\n", totalCollected);
         }
         
-        // Row-by-row sweep pattern
-        if (facing_east() && front_is_clear()) {
+        // Continue or finish
+        if (front_is_clear()) {
             karel_move();
-        } else if (facing_east() && !front_is_clear()) {
-            // End of eastward row
-            karel_turn_left(); // Face north
-            if (front_is_clear()) {
-                karel_move(); // Move up one row
-                karel_turn_left(); // Now face west
-            }
-        } else if (facing_west() && front_is_clear()) {
-            karel_move();
-        } else if (facing_west() && !front_is_clear()) {
-            // End of westward row
-            while (!facing_north()) karel_turn_left();
-            if (front_is_clear()) {
-                karel_move(); // Move up one row
-                while (!facing_east()) karel_turn_left(); // Face east
-            }
         } else {
-            // Reset to eastward direction
-            while (!facing_east()) karel_turn_left();
+            missionComplete = true;
+            printf("Street cleared! %d beepers collected total.\n", totalCollected);
         }
-        
-        lastMoveTime = timeSec;
     }
 }
 ```
 
-## Strategy: Row-by-Row Sweep
-1. **Eastward Movement**: Move east across each row
-2. **Row Transition**: When hitting east wall, move north and face west
-3. **Westward Movement**: Move west across the row
-4. **Row Transition**: When hitting west wall, move north and face east
-5. **Beeper Collection**: Always check for beepers at each position
+## Key Concepts Demonstrated
 
-## Key Concepts
-- **Systematic Search**: Complete coverage using a predictable pattern
-- **State Tracking**: Count collected beepers to know when finished
-- **Conditional Collection**: Check `beepers_present()` before pickup
-- **Direction Management**: Use facing functions to maintain search pattern
+### 1. **Conditional Beeper Detection**
+```c
+if (beepers_present()) {
+    karel_pick_beeper();  // Only pick when beeper exists
+}
+```
 
-## Alternative Patterns
-- **Spiral Pattern**: Start from outside and spiral inward
-- **Column-by-Column**: Vertical sweeps instead of horizontal
-- **Random Walk**: Less efficient but simpler to implement
+### 2. **Safe Movement**
+```c
+if (front_is_clear()) {
+    karel_move();  // Only move when path is clear
+} else {
+    // Handle wall/obstacle
+}
+```
 
-## Efficiency Considerations
-The row-by-row pattern ensures every location is visited exactly once, making it optimal for complete world coverage.
+### 3. **Mission State Tracking**
+```c
+static bool missionComplete = false;
+if (!missionComplete) {
+    // Continue collecting
+}
+```
+
+### 4. **Error Prevention**
+- Always check `beepers_present()` before `karel_pick_beeper()`
+- Always check `front_is_clear()` before `karel_move()`
+- Use static variables to prevent repeated actions
+
+## Debugging Tips
+1. **Print Karel's position** to track movement progress
+2. **Count beepers collected** to verify completeness
+3. **Add status messages** to understand current action
+4. **Test with different beeper patterns** to ensure robustness
+
+## Common Mistakes to Avoid
+- Calling `karel_pick_beeper()` without checking `beepers_present()`
+- Calling `karel_move()` without checking `front_is_clear()`
+- Not handling the end-of-street condition properly
+- Forgetting to use static variables for state persistence
+
+## Extensions
+- Collect beepers in both directions (forward and backward)
+- Count and report different types of items
+- Navigate more complex street layouts with turns
+- Add time-based performance metrics

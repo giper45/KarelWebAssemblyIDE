@@ -1,8 +1,8 @@
 {
   "id": 4,
-  "name": "Collect All Beepers",
-  "description": "Navigate the world and collect all beepers using beeper detection and pickup commands.",
-  "category": "beeper-operations", 
+  "name": "Collect All Beepers along the street",
+  "description": "Make Karel move along a street to collect all beepers using conditional logic and wall detection.",
+  "category": "beeper-operations",
   "difficulty": "Medium",
-  "estimatedTime": "25 minutes"
+  "estimatedTime": "15 minutes"
 }

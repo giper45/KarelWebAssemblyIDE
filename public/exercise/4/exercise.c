@@ -1,49 +1,38 @@
 #include "karel.h"
 
 const char* DIRECTION_NAMES[] = {"Est", "Nord", "Ovest", "Sud"};
+void studentCode();
 
 void setup() {
     karel_init();
     
-    // Place beepers at various locations
-    karel_add_beeper(3, 2);
-    karel_add_beeper(7, 4);
-    karel_add_beeper(2, 6);
-    karel_add_beeper(8, 3);
-    karel_add_beeper(5, 7);
-    karel_add_beeper(9, 2);
+    // Add beepers along the street in a scattered pattern
+    karel_add_beeper(2, 1);
+    karel_add_beeper(4, 1);
+    karel_add_beeper(5, 1);
+    karel_add_beeper(7, 1);
+    karel_add_beeper(8, 1);
 }
 
-void draw() {
-    canvas_setFillStyleZ("white");
-    canvas_fillRect(0, 0, 800, 600);
-    drawWalls();
-    drawGrid();
-    drawBeepers();
-    drawKarel();
-    drawInfo();
-}
+static double lastMoveTime = 0;
 
 void loop(double timeSec, double elapsedSec) {
-    draw();
-    
-    static double lastMoveTime = 0;
-    
-    if (timeSec - lastMoveTime > 0.6) {
-        // Check for beepers and collect them
-        if (beepers_present()) {
-            karel_pick_beeper();
-            printf("Beeper collected! Bag has %d beepers", karel.bag_beepers);
-        }
-        
-        // TODO: Student should implement systematic movement
-        // This is placeholder movement - replace with proper search pattern
-        if (front_is_clear()) {
-            karel_move();
-        } else {
-            karel_turn_left();
-        }
-        
+    if(timeSec - lastMoveTime > 1.0) {
+        studentCode();
         lastMoveTime = timeSec;
     }
+}
+
+void studentCode() {
+    drawWorld();
+    
+    // TODO: Implement beeper collection logic
+    // 1. Check if beeper present at current position
+    // 2. Pick beeper if found
+    // 3. Check if front is clear
+    // 4. Move forward if possible
+    // 5. Stop when hitting wall
+    
+    printf("Karel position: (%d, %d) - Beepers in bag: %d\n", 
+           karel.x, karel.y, karel.bag_beepers);
 }

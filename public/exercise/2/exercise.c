@@ -20,7 +20,6 @@ void loop(double timeSec, double elapsedSec) {
 void studentCode()
 {
     drawWorld();
-    karel_move();
 
 }
 
