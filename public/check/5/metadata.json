@@ -1,0 +1,8 @@
+{
+  "id": 5,
+  "name": "Karel Variables & Data Types",
+  "description": "Learn C data types and variables while controlling Karel's behavior and tracking movement statistics.",
+  "category": "c-fundamentals",
+  "difficulty": "Beginner",
+  "estimatedTime": "25 minutes"
+}

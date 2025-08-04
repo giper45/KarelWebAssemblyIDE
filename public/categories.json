@@ -13,7 +13,7 @@
     "name": "Beeper Operations",
     "concept": "Learn how to interact with beepers in Karel's world",
     "objectives": "Master beeper pickup and placement commands. Learn to detect beepers and use them to solve problems. Practice conditional logic based on beeper presence.",
-    "exercises": [4, 5, 6]
+    "exercises": [4, 6]
   },
   {
     "id": "conditional-logic",

@@ -1,6 +1,10 @@
 import React from 'react';
 
-const Title = ({ exerciseName, difficulty = "Beginner", status = "ready" }) => {
+const Title = ({ 
+  idExercise,
+  exerciseName, 
+  difficulty = "Beginner", 
+  status = "ready" }) => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'completed': return 'text-green-600 bg-green-100'
@@ -29,7 +33,7 @@ const Title = ({ exerciseName, difficulty = "Beginner", status = "ready" }) => {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900 leading-tight">
-                Exercise: {exerciseName}
+                Exercise {idExercise}: {exerciseName}
               </h1>
               <p className="text-sm text-gray-500 mt-1">
                 Karel Robot Programming Challenge

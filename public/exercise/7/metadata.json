@@ -1,0 +1,8 @@
+{
+  "id": 7,
+  "name": "Karel Constants & Preprocessor",
+  "description": "Learn about constants, #define directives, and preprocessor usage while configuring Karel's world parameters.",
+  "category": "c-fundamentals",
+  "difficulty": "Beginner",
+  "estimatedTime": "25 minutes"
+}

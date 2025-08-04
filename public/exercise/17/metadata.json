@@ -1,0 +1,8 @@
+{
+  "id": 17,
+  "name": "Karel Pointer Navigation",
+  "description": "Learn pointers and memory addresses while controlling Karel through pointer-based navigation functions.",
+  "category": "pointers-memory",
+  "difficulty": "Advanced",
+  "estimatedTime": "45 minutes"
+}

@@ -1,42 +1,66 @@
 [
   {
-    "id": "basic-movement",
-    "icon": "🤖",
-    "name": "Basic Movement",
-    "concept": "Learn how Karel moves around the world using basic movement commands",
-    "objectives": "Master the fundamental movement commands: karel_move() and karel_turn_left(). Understand how Karel navigates in a grid world and how to check if the path is clear.",
-    "exercises": [1, 2, 3]
+    "id": "c-fundamentals",
+    "icon": "🔤",
+    "name": "C Language Fundamentals",
+    "concept": "Learn the general characteristics of C language and basic program structure",
+    "objectives": "Understand C syntax, data types, variables, and basic program structure. Learn compilation process and basic input/output operations.",
+    "exercises": [5, 6, 7, 8]
   },
   {
-    "id": "beeper-operations",
-    "icon": "💎",
-    "name": "Beeper Operations",
-    "concept": "Learn how to interact with beepers in Karel's world",
-    "objectives": "Master beeper pickup and placement commands. Learn to detect beepers and use them to solve problems. Practice conditional logic based on beeper presence.",
-    "exercises": [4, 5, 6]
+    "id": "functions-scope",
+    "icon": "⚙️",
+    "name": "Functions & Scope",
+    "concept": "Master functions, parameter passing, and variable scope in C",
+    "objectives": "Learn function definition, declaration, and calling. Understand local vs global variables, scope rules, and parameter passing by value and reference.",
+    "exercises": [9, 10, 11, 12]
   },
   {
-    "id": "conditional-logic",
-    "icon": "🧠",
-    "name": "Conditional Logic", 
-    "concept": "Use conditional statements to make Karel respond to different situations",
-    "objectives": "Learn to use if statements with world sensing functions. Practice combining multiple conditions and creating responsive robot behavior.",
-    "exercises": [7, 8, 9]
+    "id": "arrays-strings",
+    "icon": "�",
+    "name": "Arrays & Strings",
+    "concept": "Work with arrays and string manipulation in C",
+    "objectives": "Master array declaration, initialization, and manipulation. Learn string handling functions and character array operations.",
+    "exercises": [13, 14, 15, 16]
   },
   {
-    "id": "loops-repetition",
-    "icon": "🔄",
-    "name": "Loops & Repetition",
-    "concept": "Use loops to make Karel repeat actions efficiently",
-    "objectives": "Master while loops and for loops. Learn to create efficient solutions that work for different world configurations. Practice loop design patterns.",
-    "exercises": [10, 11, 12]
+    "id": "pointers-memory",
+    "icon": "🔗",
+    "name": "Pointers & Memory",
+    "concept": "Understand pointers, memory management, and dynamic allocation",
+    "objectives": "Master single and double pointers, pointer arithmetic, and their practical applications. Learn memory allocation and deallocation.",
+    "exercises": [17, 18, 19, 20]
   },
   {
-    "id": "problem-solving",
+    "id": "control-structures",
     "icon": "🎯",
-    "name": "Problem Solving",
-    "concept": "Combine all Karel concepts to solve complex challenges",
-    "objectives": "Apply all learned concepts to solve multi-step problems. Practice breaking down complex tasks into simpler components. Develop algorithmic thinking skills.",
-    "exercises": [13, 14, 15]
+    "name": "Control Structures",
+    "concept": "Master control flow statements and conditional logic",
+    "objectives": "Learn if-else, switch, for, while, and do-while statements. Practice nested structures and complex conditional logic.",
+    "exercises": [21, 22, 23, 24]
+  },
+  {
+    "id": "basic-algorithms",
+    "icon": "🧮",
+    "name": "Basic Algorithms",
+    "concept": "Implement fundamental algorithms and data manipulation",
+    "objectives": "Master insertion, deletion, searching (linear and binary), sorting algorithms, and basic data structure operations.",
+    "exercises": [25, 26, 27, 28, 29, 30]
+  },
+  {
+    "id": "data-structures",
+    "icon": "📊",
+    "name": "Data Structures",
+    "concept": "Implement and use basic data structures",
+    "objectives": "Learn stack, queue, and linked list operations. Practice implementing basic data structure operations and algorithms.",
+    "exercises": [31, 32, 33, 34]
+  },
+  {
+    "id": "complete-programs",
+    "icon": "�",
+    "name": "Complete Programs",
+    "concept": "Build complete C programs combining all learned concepts",
+    "objectives": "Integrate all learned concepts to create complex, real-world C programs. Practice project organization and advanced programming techniques.",
+    "exercises": [35, 36, 37, 38]
   }
 ]

@@ -1,0 +1,8 @@
+{
+  "id": 10,
+  "name": "Karel Scope & Global Variables",
+  "description": "Understand variable scope, global vs local variables, and visibility rules while managing Karel's state.",
+  "category": "functions-scope",
+  "difficulty": "Intermediate",
+  "estimatedTime": "35 minutes"
+}

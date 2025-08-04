@@ -1,0 +1,8 @@
+{
+  "id": 6,
+  "name": "Karel Input Processing",
+  "description": "Learn to read and process different types of input while controlling Karel's behavior based on commands.",
+  "category": "c-fundamentals",
+  "difficulty": "Beginner",
+  "estimatedTime": "30 minutes"
+}

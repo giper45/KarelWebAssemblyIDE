@@ -180,7 +180,7 @@ const IdeControls = ({
       theme={theme}
       onThemeChange={onThemeChange}
     />
-    <div className="flex full-w">
+    <div className="flex flex-row w-1/2 px-5">
       <CodeControls
         onRun={onRun}
         isRunning={isRunning}

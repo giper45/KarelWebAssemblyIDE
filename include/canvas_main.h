@@ -16,7 +16,6 @@ int main() {
 
 #define WASM_EXPORT __attribute__((__visibility__("default")))
 
-bool is_already_called = false;
 extern "C" WASM_EXPORT void canvas_loop(double msec) {
   static bool first = true;
   static double lastSec = 0;
@@ -31,13 +30,8 @@ extern "C" WASM_EXPORT void canvas_loop(double msec) {
   
   // Call loop only once per second
   if (sec - lastLoopSec >= 1.0) {
-    if (!is_already_called) {
-      loop(sec, 1.0);  // Always pass 1.0 as elapsed time for consistent timing
-      is_already_called = true;
-      lastLoopSec = sec;
-    }
-  } else {
-    is_already_called = false;
+    loop(sec, sec - lastSec);
+    lastLoopSec = sec;
   }
   lastSec = sec;
 }

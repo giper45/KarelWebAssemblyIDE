@@ -1,0 +1,8 @@
+{
+  "id": 14,
+  "name": "Karel String Operations", 
+  "description": "Learn string manipulation and character arrays while creating Karel command parsing and name management systems.",
+  "category": "arrays-strings",
+  "difficulty": "Intermediate",
+  "estimatedTime": "40 minutes"
+}

@@ -8,24 +8,37 @@ This exercise demonstrates Karel's basic movement pattern: move forward when pos
 2. **Wall Avoidance**: Use `karel_turn_left()` to navigate around obstacles
 3. **Loop Logic**: The movement logic runs continuously in the main loop
 
-## Code Analysis
+Look at this code:
 ```c
-static double lastMoveTime = 0;
-if(timeSec - lastMoveTime > 1.0) {
-    if(front_is_clear()) {
-        karel_move();
-    } else {
+void studentCode()
+{
+    drawWorld();
+    karel_move();
+    if (!front_is_clear())
+    {
         karel_turn_left();
     }
-    lastMoveTime = timeSec;
+    if (beepers_present())
+    {
+        karel_pick_beeper();
+    }
+
 }
+
 ```
 
-## What Happens
-1. Karel checks if 1 second has passed (timing control)
-2. If front is clear, Karel moves forward
-3. If blocked by a wall, Karel turns left
-4. This creates a wall-following behavior
+The `drawWorld()` function always renders the world. 
+The `karel_move()` moves Karel of a single step. 
+If `front_is_clear()` is false, there is a wall (or the end of the world) in front of Karel, so it turns left with `karel_turn_left()`.
+
+The `beepers_present()` checks if there is a beeper in Karel's current position, and if so, it picks it up with `karel_pick_beeper()`.
+
+With this logic, Karel is able to pick the first beeper under the wall and navigate around the world.
+
+Try some other functions, for example, try to go to the north-west corner of the world, or try to pick all the beepers in the world.
+
+
+
 
 ## Expected Behavior
 Karel will navigate around the world's perimeter, following walls and turning when necessary. This creates a predictable patrol pattern.

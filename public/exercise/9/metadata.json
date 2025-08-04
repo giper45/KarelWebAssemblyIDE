@@ -1,0 +1,8 @@
+{
+  "id": 9,
+  "name": "Karel Function Library",
+  "description": "Create custom functions to extend Karel's capabilities and learn function definition, parameters, and return values.",
+  "category": "functions-scope",
+  "difficulty": "Intermediate",
+  "estimatedTime": "35 minutes"
+}

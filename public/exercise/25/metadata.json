@@ -1,0 +1,8 @@
+{
+  "id": 25,
+  "name": "Linear Search Algorithm",
+  "description": "Implement and understand the linear search algorithm for finding elements in arrays.",
+  "category": "basic-algorithms",
+  "difficulty": "Intermediate",
+  "estimatedTime": "35 minutes"
+}

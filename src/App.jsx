@@ -6,6 +6,9 @@ import LoadingSpinner from './components/LoadingSpinner'
 import TabComponent from './components/TabComponent';
 import IsRunningButton from './components/IsRunningButton';
 import IdeControls from './components/IdeControls';
+import DocumentationDialog from './components/DocumentationDialog';
+
+import { saveCodeToLocalStorage, saveCurrentExerciseToLocalStorage, getCodeFromLocalStorage, getCurrentExerciseFromLocalStorage, isCodePresentInLocalStorage, isExercisePresentInLocalStorage } from './utils/localStorageUtils';
 
 
 // import CanvasPanel from './components/CanvasPanel';
@@ -76,8 +79,11 @@ function App() {
   const [terminalOutput, setTerminalOutput] = useState('')
   const [isRunning, setIsRunning] = useState(false)
   const [isActive, setIsActive] = useState(false)
+  const [editorEventConfigured, setEditorEventConfigured] = useState(false)
+  const [isHelpDialogOpen, setIsHelpDialogOpen] = useState(false)
   const [loadingMessage, setLoadingMessage] = useState('Initializing...')
   const [editorInitialized, setEditorInitialized] = useState(false)
+  const [activeTab, setActiveTab] = useState('readme');
   const editorRef = useRef(null)
   const terminalRef = useRef(null)
   const fileInputRef = useRef(null)
@@ -90,7 +96,10 @@ function App() {
     loading,
     error,
     getExercisesByCategory,
-    getExercise
+    getPreviousExercise,
+    getNextExercise,
+    getExercise,
+
   } = useExerciseData();
 
   // Stato per sidebar e esercizio corrente
@@ -99,6 +108,13 @@ function App() {
   // const [currentExerciseId, setCurrentExerciseId] = useState(1);
   // Ottieni l'esercizio corrente solo se i dati sono caricati
   // const currentExercise = !loading ? getExercise(currentExerciseId) : null;
+  const uploadCodeFromEditor = () => {
+    const editor = window.ace.edit(editorRef.current);
+    setCurrentExercise({
+      ...currentExercise,
+      exerciseCode: editor.getValue()
+    });
+  }
 
   // Quando selezioni un esercizio dalla sidebar
   const handleExerciseSelect = (exercise) => {
@@ -113,10 +129,30 @@ function App() {
     setIsSidebarOpen(!isSidebarOpen)
   }
 
+  const handleHelpClick = () => {
+    setIsHelpDialogOpen(true)
+  }
+
+  const handleHelpClose = () => {
+    setIsHelpDialogOpen(false)
+  }
+
+  const handleClearTerminal = () => {
+    setTerminalOutput('')
+  }
+
+  // const resetWorld = async () => {
+  //   await safeStop()
+  //   console.log("COMPILE LINK RUN")
+  //   apiRef.current.compileLinkRun(currentExercise.worldCode)
+  // }
+
+
+
   const canvasRef = useRef(null);
   // Aggiorna il codice quando cambia l'esercizio e i dati sono caricati
   useEffect(() => {
-    if (!loading) {
+    if (!loading && !currentExercise) {
       setCurrentExercise(getExercise(1))
       // if (currentExercise && currentExercise.exerciseCode) {
       //   setCode(currentExercise.exerciseCode);
@@ -124,6 +160,38 @@ function App() {
     }
   }, [loading]);
 
+  //   useEffect(() => {
+  //   if (window.ace && editorRef.current && !editorEventConfigured) {
+  //     setEditorEventConfigured(true);
+  //     const editor = window.ace.edit(editorRef.current);
+
+  //     // Imposta il valore iniziale
+  //     editor.setValue(currentExercise.exerciseCode, -1);
+
+  //     // Listener per l'evento di modifica
+  //     const handleChange = () => {
+  //       if (editor.getValue() != currentExercise.exerciseCode && editor.getValue() != "")
+  //       {
+  //         console.log("IN HANDLE CHANGE")
+  //         setCurrentExercise({
+  //           ...currentExercise,
+  //           exerciseCode: editor.getValue()
+  //         })
+
+  //       }
+  //       // Se vuoi aggiornare anche currentExercise:
+  //       // setCurrentExercise(prev => ({ ...prev, exerciseCode: editor.getValue() }));
+  //     };
+
+  //     editor.on('change', handleChange);
+
+  //     // Cleanup: rimuovi il listener quando il componente si smonta
+  //     return () => {
+  //       console.log("CLEANUP")
+  //       editor.off('change', handleChange);
+  //     };
+  //   }
+  // }, [editorRef, window.ace]);
 
   // Remove the local canvasRef, accept it as a prop instead
   // Remove this line: const canvasRef = useRef(null);
@@ -134,7 +202,7 @@ function App() {
       canvas.width = 800
       canvas.height = 600
 
-      // Rendi il canvas disponibile globalmente come nell'originale
+      // Rendi il canvas disponibile globalmente 
       window.canvas = canvas
       window.ctx2d = canvas.getContext('2d')
 
@@ -143,15 +211,92 @@ function App() {
   }, [loading, canvasRef, currentExercise])
 
 
+      //   let code = ""
+      //   let exercise = null
+
+      //   if (isCodePresentInLocalStorage())
+      //     code = getCodeFromLocalStorage()
+      //   if (isExercisePresentInLocalStorage()) {
+      //   exercise = getCurrentExerciseFromLocalStorage()
+      //   if (exercise && code) {
+      //     exercise.exerciseCode = code
+      //   }
+      // }
+        
+      //   // Not found exercise
+      //   if (!exercise) {
+      //     exercise = firstExercise
+      //     if (code != "")
+      //       exercise.exerciseCode = code
+      //   }
+      //   setCurrentExercise(exercise)
+      //   const editor = window.ace.edit(editorRef.current);
+      //   editor.setValue(exercise.exerciseCode)
+  // When current exercise changes, compile the worldCode and update the editor page. In addition, change the stored code in the local storage
   useEffect(() => {
+    console.log("Before everything")
+    console.log(currentExercise)
+    let localCode = null
+    let localExercise = null 
+    if (isCodePresentInLocalStorage())
+      localCode = getCodeFromLocalStorage()
+    if (isExercisePresentInLocalStorage())
+      localExercise = getCurrentExerciseFromLocalStorage()
+
+    if (localExercise)
+    {
+      if (localCode) {
+        localExercise.exerciseCode = localCode
+      }
+      setCurrentExercise(localExercise)
+      console.log("Set current work")
+    }
+    
+  }, [])
+  useEffect(() => {
+    console.log("In update editor")
     if (editorRef && editorRef.current && currentExercise && window.ace) {
       const editor = window.ace.edit(editorRef.current)
-      editor.setValue(currentExercise.exerciseCode, -1)
+      console.log(currentExercise.exerciseCode)
+      let exerciseCode;
+      // If undefined try to take from local storage, otherwise defaut exercise 1
+      if (!currentExercise.exerciseCode)
+      {
+        if (isCodePresentInLocalStorage())
+        {
+          exerciseCode = getCodeFromLocalStorage()
+          // setCurrentExercise(
+          //   ...currentExercise,
+          //   exerciseCode
+          // )
+        }
+        else 
+        {
+          exerciseCode = getExercise(1).exerciseCode
+        }
+      }
+      else
+      {
+        exerciseCode = currentExercise.exerciseCode
+      }
+      editor.setValue(exerciseCode, -1)
+      // async function _world() 
+      // {
+      //   await resetWorld()
+
+      // }
+      // _world()
+      if (exerciseCode)
+        saveCodeToLocalStorage(exerciseCode)
+      if (currentExercise)
+        saveCurrentExerciseToLocalStorage(currentExercise)
+
     }
   }, [currentExercise, editorRef, window.ace])
 
   // Inizializza ACE Editor
   useEffect(() => {
+    console.log("Init ACE")
     if (!loading && canvasRef.current && currentExercise) {
       const loadAceScripts = async () => {
         try {
@@ -232,12 +377,10 @@ function App() {
               editor.setKeyboardHandler('ace/keyboard/vim')
             }
 
-            // editor.on('change', () => {
-            //   setCurrentExercise({
-            //     ...currentExercise,
-            //     exerciseCode: editor.getValue()
-            //   })
-            // })
+            editor.on('change', () => {
+              const code = editor.getValue();
+              saveCodeToLocalStorage(code)
+            })
 
             // Comando run con Ctrl+Enter
             editor.commands.addCommand({
@@ -384,24 +527,51 @@ function App() {
   //   }
   // }, [])
 
+  const safeStop = async () => {
+      const USER_STOP = 0xC1C1A
+      try {
+        await apiRef.current.stop()
+      }
+      catch (error) {
+        if (error.code == USER_STOP) {
+          console.log("OK - Safe exit by user")
+          return 0
+        }
+      else {
+        throw Error("Some error in stop program");
+      }
+
+  }
+}
   const run = async () => {
+    let _isActive = true
     if (!apiRef.current) {
       setTerminalOutput(prev => prev + 'Error: API not initialized\n')
       return
     }
-
-    setIsRunning(true)
-    setIsActive(true)
+    await safeStop()
+    handleClearTerminal()
+    setActiveTab('terminal');
+    uploadCodeFromEditor();
+    setIsRunning(true);
+    setIsActive(_isActive);
     setTerminalOutput(prev => prev + '\n--- Running program ---\n')
 
     try {
-      await apiRef.current.compileLinkRun(currentExercise.exerciseCode)
-    } catch (error) {
-      console.error('Error running program:', error)
-      setTerminalOutput(prev => prev + `Error: ${error.message}\n`)
+      await apiRef.current.compileLinkRun(editor.getValue())
+    } 
+    catch (error) {
+        console.error('Error running program:', error)
+        _isActive = false
+        setIsActive(_isActive);
+        // setTerminalOutput(prev => prev + `Error: ${error.message}\n`)
+
+      
     } finally {
       setIsRunning(false)
+      _isActive ? setActiveTab('world') : setActiveTab('terminal')
     }
+
   }
 
   const handleOpenFileClick = () => {
@@ -425,30 +595,36 @@ function App() {
     event.target.value = ''
   }
 
-  const resetLayout = () => {
+  const resetLayout = async () => {
     // if (confirm('Really reset?')) {
-      // setCode(initialProgram)
-      setTerminalOutput('');
-      setIsActive(false);
-      // if (window.editor) {
-      //   window.editor.setValue(initialProgram, -1)
-      // }
-      apiRef.current.stop();
+    // setCode(initialProgram)
+    setTerminalOutput('');
+    setIsActive(false);
+    // if (window.editor) {
+    //   window.editor.setValue(initialProgram, -1)
     // }
+    // apiRef.current.stop();
+    await safeStop()
+    // }
+  }
+  const handleChangeTab = (tab) => {
+    setActiveTab(tab);
   }
 
 
   const handlePreviousExercise = () => {
     const currentIndex = currentExercise.id;
     if (currentIndex > 0) {
-      const previousExercise = exercises[currentIndex - 1];
+      // const previousExercise = exercises[currentIndex - 1];
+      const previousExercise = getPreviousExercise(currentIndex)
       handleExerciseSelect(previousExercise);
     }
   };
 
   const handleNextExercise = () => {
     const currentIndex = currentExercise.id;
-    const nextExercise = exercises[currentIndex + 1];
+    // const nextExercise = exercises[currentIndex + 1];
+    const nextExercise = getNextExercise(currentIndex)
     handleExerciseSelect(nextExercise);
   };
 
@@ -460,7 +636,7 @@ function App() {
 
   const hasNextExercise = () => {
     const currentIndex = currentExercise.id;
-    return currentIndex < Object.keys(exercises).length - 1;
+    return currentIndex < Object.keys(exercises).length;
   };
 
 
@@ -500,6 +676,7 @@ function App() {
         theme={theme}
         onThemeChange={setTheme}
         onSidebarToggle={toggleSidebar}
+        onHelpClick={handleHelpClick}
       />
 
 
@@ -509,6 +686,7 @@ function App() {
       {!loading && currentExercise && (
         <div className="flex flex-col flex-1 h-full w-full">
           <Title
+            idExercise={currentExercise.id}
             exerciseName={currentExercise.name}
             difficulty={currentExercise.difficulty}
             status={currentExercise.status}
@@ -537,34 +715,43 @@ function App() {
           <div className="flex flex-1 h-full min-h-0 overlow-y-auto">
 
             {/* Top row: Editor + Canvas */}
-              {/* Editor */}
-              <div className="flex-1 border-r border-gray-300 bg-white shadow-sm">
-                <div
-                  ref={editorRef}
-                  className="w-full h-full text-lg"
-                />
-              </div>
+            {/* Editor */}
+            <div className="flex-1 border-r border-gray-300 bg-white shadow-sm">
+              <div
+                ref={editorRef}
+                className="w-full h-full text-lg"
+              />
+            </div>
 
-              {/* Canvas Panel */}
-              <div className="flex-1 w-full h-full shrink-0 bg-gray-50">
-                {/* <CanvasPanel /> */}
-                <TabComponent
-                  terminalOutput={terminalOutput}
-                  canvasRef={canvasRef}
-                  readme={currentExercise.readme}
-                  solution={currentExercise.solution}
-                  isActive={isActive}
-                />
+            {/* Canvas Panel */}
+            <div className="flex-1 w-full h-full shrink-0 bg-gray-50">
+              {/* <CanvasPanel /> */}
+              <TabComponent
+                terminalOutput={terminalOutput}
+                canvasRef={canvasRef}
+                activeTab={activeTab}
+                onChangeTab={handleChangeTab}
+                readme={currentExercise.readme}
+                solution={currentExercise.solution}
+                isActive={isActive}
+                onClearTerminal={handleClearTerminal}
+              />
 
-                {/* Status Indicator */}
-                <IsRunningButton
-                  isRunning={isRunning}
-                />
-              </div>
+              {/* Status Indicator */}
+              <IsRunningButton
+                isRunning={isRunning}
+              />
             </div>
           </div>
+        </div>
       )}
       <Footer />
+
+      {/* Documentation Dialog */}
+      <DocumentationDialog 
+        isOpen={isHelpDialogOpen}
+        onClose={handleHelpClose}
+      />
 
     </div>
   )

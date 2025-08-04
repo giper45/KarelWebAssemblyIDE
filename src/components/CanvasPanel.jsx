@@ -29,5 +29,24 @@ const CanvasPanel = ({
         </div>
     );
 };
+// const CanvasPanel = ({
+//     canvasRef,
+//     isActive
+// }) => {
+//     return (
+//             <div className="h-full">
+//                 <div className="w-full h-full bg-gray-100 flex flex-col">
+//                     <div className="h-full p-6 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+//                         <canvas
+//                             ref={canvasRef}
+//                             width={400}
+//                             height={300}
+//                             className="border-2 border-gray-800 bg-white rounded-lg shadow-lg max-w-full max-h-full"
+//                         />
+//                     </div>
+//                 </div>
+//             </div>
+//     );
+// };
 
 export default CanvasPanel;

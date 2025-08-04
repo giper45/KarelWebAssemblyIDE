@@ -284,35 +284,30 @@ static inline void drawInfo()
     canvas_fillText(info, strlen(info), 300, 10);
 }
 
-// Funzioni di movimento di Karel
-static inline void karel_move()
+static inline void drawWorld()
 {
-    int new_x = karel.x;
-    int new_y = karel.y;
+    canvas_setFillStyleZ("white");
+    canvas_fillRect(0, 0, 800, 600);
+    drawWalls();
+    drawGrid();
+    drawBeepers();
+    drawKarel();
+    drawInfo();
 
-    switch (karel.direction)
-    {
-    case 0:
-        new_x++;
-        break; // Est
-    case 1:
-        new_y++;
-        break; // Nord
-    case 2:
-        new_x--;
-        break; // Ovest
-    case 3:
-        new_y--;
-        break; // Sud
-    }
-
-    // Controlla i limiti del mondo
-    if (new_x >= 1 && new_x <= WORLD_WIDTH && new_y >= 1 && new_y <= WORLD_HEIGHT)
-    {
-        karel.x = new_x;
-        karel.y = new_y;
-    }
 }
+
+static inline void drawWorldRect(f64 x, f64 y, f64 w, f64 h)
+{
+    canvas_setFillStyleZ("white");
+    canvas_fillRect(0, 0, 800, 600);
+    drawWalls();
+    drawGrid();
+    drawBeepers();
+    drawKarel();
+    drawInfo();
+
+}
+
 
 static inline void karel_turn_left()
 {
@@ -369,6 +364,31 @@ static inline bool front_is_clear()
 
     return (new_x >= 1 && new_x <= WORLD_WIDTH && new_y >= 1 && new_y <= WORLD_HEIGHT);
 }
+
+// Funzioni di movimento di Karel
+static inline void karel_move()
+{
+    // Usa front_is_clear() per controllare sia i muri che i limiti del mondo
+    if (front_is_clear())
+    {
+        switch (karel.direction)
+        {
+        case 0:
+            karel.x++;
+            break; // Est
+        case 1:
+            karel.y++;
+            break; // Nord
+        case 2:
+            karel.x--;
+            break; // Ovest
+        case 3:
+            karel.y--;
+            break; // Sud
+        }
+    }
+}
+
 
 static inline bool beepers_present()
 {

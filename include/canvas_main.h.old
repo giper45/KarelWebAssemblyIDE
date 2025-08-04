@@ -16,24 +16,34 @@ int main() {
 
 #define WASM_EXPORT __attribute__((__visibility__("default")))
 
+bool is_already_called = false;
 extern "C" WASM_EXPORT void canvas_loop(double msec) {
   static bool first = true;
   static double lastSec = 0;
   static double lastLoopSec = 0;
   double sec = msec / 1000.0;
-  if (first) {
-    lastSec = sec;
-    lastLoopSec = sec;
-    first = false;
-  }
+  // if (first) {
+  //   lastSec = sec;
+  //   lastLoopSec = sec;
+  //   first = false;
+  // }
+  // lastLoopSec = sec;
+
   canvas_requestAnimationFrame();
   
   // Call loop only once per second
+  // if (sec - lastLoopSec >= 1.0) {
   if (sec - lastLoopSec >= 1.0) {
-    loop(sec, sec - lastSec);
-    lastLoopSec = sec;
-  }
-  lastSec = sec;
+    // if (!is_already_called) {
+      // loop(sec, 1.0);  // Always pass 1.0 as elapsed time for consistent timing
+      // is_already_called = true;
+      lastLoopSec = sec;
+  //   }
+  // } else {
+  //   is_already_called = false;
+  // }
+  // lastSec = sec;
+}
 }
 
 #undef WASM_EXPORT

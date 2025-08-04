@@ -14,16 +14,18 @@ function TabComponent({
   canvasRef,
   readme,
   solution,
-  isActive
+  activeTab,
+  onChangeTab,
+  isActive,
+  onClearTerminal
 }) {
-  const [activeTab, setActiveTab] = useState('readme');
 
   return (
     <div className="w-full h-full">
       {/* Tab Navigation */}
       <div className="flex border-b border-gray-200">
         <button
-          onClick={() => setActiveTab('readme')}
+          onClick={() => onChangeTab('readme')}
           className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors ${activeTab === 'readme'
               ? 'border-blue-500 text-blue-600 bg-blue-50'
               : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -33,7 +35,7 @@ function TabComponent({
           README
         </button>
         <button
-          onClick={() => setActiveTab('world')}
+          onClick={() => onChangeTab('world')}
           className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors ${activeTab === 'world'
               ? 'border-blue-500 text-blue-600 bg-blue-50'
               : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -43,7 +45,7 @@ function TabComponent({
           Karen World
         </button>
         <button
-          onClick={() => setActiveTab('terminal')}
+          onClick={() => onChangeTab('terminal')}
           className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors ${activeTab === 'terminal'
               ? 'border-blue-500 text-blue-600 bg-blue-50'
               : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -53,7 +55,7 @@ function TabComponent({
           Terminal
         </button>
         <button
-          onClick={() => setActiveTab('solution')}
+          onClick={() => onChangeTab('solution')}
           className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors ${activeTab === 'solution'
               ? 'border-blue-500 text-blue-600 bg-blue-50'
               : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -77,7 +79,7 @@ function TabComponent({
           <CanvasPanel canvasRef={canvasRef} isActive={isActive} />
         </div>
         <div className={activeTab === 'terminal' ? '' : 'hidden'}>
-          <Terminal output={terminalOutput} />
+          <Terminal output={terminalOutput} onClearTerminal={onClearTerminal} />
         </div>
         <div className={activeTab === 'solution' ? '' : 'hidden'}>
           <MarkdownReader markdownContent={solution} />

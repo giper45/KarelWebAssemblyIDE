@@ -282,6 +282,7 @@ class MemFS {
 }
 
 const RAF_PROC_EXIT_CODE = 0xC0C0A;
+const USER_STOP = 0xC1C1A
 
 class App {
   constructor(module, memfs, name, ...args) {
@@ -289,8 +290,10 @@ class App {
     this.environ = {USER : 'alice'};
     this.memfs = memfs;
     this.allowRequestAnimationFrame = true;
+    this.lastRender = 0;
     this.handles = new Map();
     this.nextHandle = 0;
+    this.animationId;
 
     const env = getImportObject(this, [
       'canvas_arc',
@@ -340,7 +343,7 @@ class App {
       'canvas_strokeRect',
       'canvas_strokeText',
       'canvas_transform',
-      'canvas_translate',
+      'canvas_translate'
     ]);
 
     const wasi_unstable = getImportObject(this, [
@@ -465,14 +468,19 @@ class App {
   }
 
   // Canvas API
-  canvas_setWidth(width) { if (canvas) canvas.width = width; }
+  canvas_setWidth(width) {  if (canvas) canvas.width = width; }
   canvas_setHeight(height) { if (canvas) canvas.height = height; }
   canvas_requestAnimationFrame() {
     if (this.allowRequestAnimationFrame) {
-      requestAnimationFrame(ms => {
-        if (this.allowRequestAnimationFrame) {
-          this.exports.canvas_loop(ms);
+      this.animationId = requestAnimationFrame(ms => {
+        if (!this.lastLogTime || ms - this.lastLogTime >= 1000)
+        {
+          this.lastLogTime = ms;
+          // if (this.allowRequestAnimationFrame) {
+          // }
+
         }
+        this.exports.canvas_loop(ms);
       });
     }
   }
@@ -814,13 +822,18 @@ class API {
     }
     return stillRunning ? app : null;
   }
-
   // Add method to stop current execution
   stop() {
     if (this.currentApp) {
       this.hostWrite('\n\x1b[91mExecution stopped by user.\x1b[0m\n');
       this.currentApp.allowRequestAnimationFrame = false;
-      this.currentApp.proc_exit(1); // Force exit with error code
+      if (this.currentApp.animationId)
+      {
+        console.log("Cancel animation id "+ this.currentApp.animationId)
+        cancelAnimationFrame(this.animationId)
+        this.animationId = null;
+      }
+      this.currentApp.proc_exit(USER_STOP); // Force exit with error code
       this.currentApp = null;
     }
     else {
