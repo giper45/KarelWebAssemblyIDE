@@ -12,7 +12,6 @@ Look at this code:
 ```c
 void studentCode()
 {
-    drawWorld();
     karel_move();
     if (!front_is_clear())
     {

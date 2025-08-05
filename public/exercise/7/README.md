@@ -1,46 +1,73 @@
-# Karel Constants & Preprocessor
+# Avoid Obstacles
 
 ## Objective
-Learn about constants, #define directives, and preprocessor usage by creating configurable Karel world parameters and behavior constants.
+Teach Karel how to navigate around obstacles using conditional logic and directional control.
 
 ## Background
-Constants and preprocessor directives help create maintainable, configurable code:
-- **#define**: Create symbolic constants and simple macros
-- **const keyword**: Create read-only variables
-- **Preprocessor**: Text replacement before compilation
-- **Configuration**: Use constants for world settings and behavior parameters
+Karel is at the beginning of a corridor containing several obstacles (walls). The task is to make Karel advance along the main path, avoiding each obstacle encountered by moving right when necessary.
 
 ## Your Task
-1. Use #define to create symbolic constants for world configuration
-2. Create const variables for Karel behavior parameters
-3. Build configurable macros for common Karel operations
-4. Understand the difference between #define and const
-5. Practice conditional compilation with #ifdef
+Write code that allows Karel to:
+1. Advance along the main corridor (row 1)
+2. Detect when there's a wall ahead
+3. Navigate around the obstacle by moving right (up)
+4. Return to the main path after bypassing the obstacle
+5. Continue until reaching the end of the corridor
 
-## Key Concepts
-- **#define CONSTANT value**: Preprocessor text replacement
-- **const type name = value**: Read-only variables
-- **Macros**: #define with parameters for code generation
-- **Conditional Compilation**: #ifdef, #ifndef, #endif
-- **Header Guards**: Prevent multiple inclusion
+## New Programming Concepts
+- **Complex Conditional Logic**: Combining multiple conditions to make decisions
+- **Obstacle Navigation**: Strategies for bypassing barriers
+- **Directional Control**: Managing Karel's direction in complex situations
+- **Avoidance Patterns**: Standard algorithms for obstacle evasion
 
-## Configuration Areas You'll Implement
-- World size and boundary constants
-- Movement timing and speed settings
-- Beeper limits and inventory constants
-- Debug and display configuration options
-- Karel behavior parameter tuning
+## Functions You'll Use
+- `front_is_clear()` - Check if Karel can move forward
+- `right_is_clear()` - Check if Karel can move right
+- `karel_turn_left()` - Turn Karel left (used to turn right: 3 times left)
+- `karel_move()` - Move Karel one position
+- `facing_east()` - Check if Karel is facing east
 
-## Karel Applications
-- Configure world dimensions and limits
-- Set movement delays and animation timing
-- Define maximum beeper capacities
-- Create debug output controls
-- Standardize common operation sequences
+## Avoidance Strategy
+The standard algorithm for bypassing obstacles to the right:
+1. **Detection**: If the front is blocked
+2. **Turn Right**: Orient Karel upward
+3. **Move Up**: Bypass the obstacle by moving upward
+4. **Turn Right**: Orient Karel eastward
+5. **Move Forward**: Continue along the parallel path
+6. **Turn Right**: Orient Karel downward
+7. **Move Down**: Return to the main path
+8. **Turn Right**: Orient Karel eastward again
 
-## Tips
-- Use ALL_CAPS for #define constants
-- Use descriptive names: MAX_BEEPERS not just MAX
-- Group related constants together
-- Document what each constant controls
-- Test different configurations to verify flexibility
+## Success Criteria
+- Karel must reach the end of the corridor
+- All obstacles must be correctly bypassed
+- Karel must always return to the main path (row 1)
+- No runtime errors from invalid movements
+
+## Code Structure
+Your `studentCode()` function should:
+1. Check if the front is clear
+2. If blocked, execute the avoidance sequence
+3. If clear, continue advancing
+4. Handle completion when reaching the end
+
+## Suggested Helper Function
+```c
+void turn_right() {
+    karel_turn_left();
+    karel_turn_left();
+    karel_turn_left();
+}
+```
+
+## Example Scenario
+- Corridor with obstacles at positions: 3, 6, 8
+- Karel starts at (1,1) facing east
+- Karel bypasses each obstacle by temporarily moving to row 2
+- Karel ends at the end of the corridor in row 1
+
+## Debugging Tips
+1. **Print Karel's position** at each movement
+2. **Track direction** to verify correct orientation
+3. **Check the avoidance pattern** step by step
+4. **Verify return** to main path after each obstacle

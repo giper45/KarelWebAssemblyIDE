@@ -1,8 +1,0 @@
-{
-  "id": 31,
-  "name": "Karel Stack & Queue Operations",
-  "description": "Implement stack and queue data structures using Karel's beeper collection and placement operations.",
-  "category": "data-structures",
-  "difficulty": "Advanced",
-  "estimatedTime": "50 minutes"
-}

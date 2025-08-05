@@ -4,8 +4,6 @@
 This exercise teaches conditional logic and safe movement by requiring Karel to collect scattered beepers while avoiding runtime errors.
 ```c
 void studentCode() {
-    drawWorld();
-    
     static bool missionComplete = false;
     static int totalCollected = 0;
     

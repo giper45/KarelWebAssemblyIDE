@@ -1,195 +1,116 @@
-# Solution: Karel Input Processing
+# Solution: Count Beepers
 
 ## Solution Explanation
-This exercise demonstrates how to create an interactive Karel control system using scanf for input and printf for formatted output.
+This exercise teaches basic counting logic by having Karel count beepers along a street and display the running count.
 
-## Complete Solution
+## Solution
 ```c
-#include "karel.h"
-
-const char* DIRECTION_NAMES[] = {"Est", "Nord", "Ovest", "Sud"};
-
-int user_command = 0;
-int move_count = 1;
-char command_char = 'h';
-int target_x = 1, target_y = 1;
-
-void show_help() {
-    printf("\n=== Karel Command Help ===\n");
-    printf("h - Show this help\n");
-    printf("m - Move Karel (specify steps)\n");
-    printf("t - Turn Karel left\n");
-    printf("p - Put beeper at current position\n");
-    printf("g - Get beeper from current position\n");
-    printf("s - Show Karel's current status\n");
-    printf("c - Move to coordinates (x,y)\n");
-    printf("q - Quit\n");
-    printf("=========================\n\n");
-}
-
-void show_status() {
-    printf("\n=== Karel Status ===\n");
-    printf("Position: (%d, %d)\n", karel.x, karel.y);
-    printf("Facing: %s\n", DIRECTION_NAMES[karel.direction]);
-    printf("Beepers in bag: %d\n", karel.bag_beepers);
-    printf("Front clear: %s\n", front_is_clear() ? "Yes" : "No");
-    printf("==================\n\n");
-}
-
-int validate_move_count(int count) {
-    if (count < 1 || count > 20) {
-        printf("Error: Move count must be between 1 and 20\n");
-        return 0;
-    }
-    return 1;
-}
-
-int validate_coordinates(int x, int y) {
-    if (x < 1 || x > WORLD_WIDTH || y < 1 || y > WORLD_HEIGHT) {
-        printf("Error: Coordinates must be within world bounds\n");
-        printf("Valid range: x(1-%d), y(1-%d)\n", WORLD_WIDTH, WORLD_HEIGHT);
-        return 0;
-    }
-    return 1;
-}
-
-void execute_moves(int count) {
-    int successful_moves = 0;
+void studentCode() {
+    static bool missionComplete = false;
+    static int beeperCount = 0;
     
-    for (int i = 0; i < count; i++) {
-        if (front_is_clear()) {
-            karel_move();
-            successful_moves++;
-        } else {
-            printf("Blocked after %d moves - turning left\n", successful_moves);
-            karel_turn_left();
-            break;
+    if (!missionComplete) {
+        // TODO: Implement counting logic
+        // 1. Check if beeper present at current position
+        // 2. Increment counter if beeper found
+        // 3. Move forward if possible
+        // 4. Display final count when wall reached
+        
+        if (beepers_present())
+        {
+            beeperCount++;
         }
-    }
-    
-    printf("Completed %d out of %d requested moves\n", successful_moves, count);
-}
-
-void process_command() {
-    printf("Enter command (h for help): ");
-    scanf(" %c", &command_char);
-    
-    switch(command_char) {
-        case 'h':
-            show_help();
-            break;
+        karel_move();
+        if (!front_is_clear())
+        {
+            printf("Counting completed, beeperCount: %d", beeperCount);
+            missionComplete = true;
             
-        case 'm':
-            printf("How many steps? ");
-            scanf("%d", &move_count);
-            if (validate_move_count(move_count)) {
-                execute_moves(move_count);
-            }
-            break;
-            
-        case 't':
-            karel_turn_left();
-            printf("Karel turned left - now facing %s\n", 
-                   DIRECTION_NAMES[karel.direction]);
-            break;
-            
-        case 'p':
-            karel_put_beeper();
-            printf("Beeper placed at (%d, %d)\n", karel.x, karel.y);
-            break;
-            
-        case 'g':
-            if (beepers_present()) {
-                karel_pick_beeper();
-                printf("Beeper collected from (%d, %d)\n", karel.x, karel.y);
-            } else {
-                printf("No beeper at current position (%d, %d)\n", 
-                       karel.x, karel.y);
-            }
-            break;
-            
-        case 's':
-            show_status();
-            break;
-            
-        case 'c':
-            printf("Enter target coordinates (x y): ");
-            scanf("%d %d", &target_x, &target_y);
-            if (validate_coordinates(target_x, target_y)) {
-                printf("Moving to (%d, %d)...\n", target_x, target_y);
-                // Simple navigation logic would go here
-            }
-            break;
-            
-        case 'q':
-            printf("Goodbye!\n");
-            break;
-            
-        default:
-            printf("Unknown command '%c'. Type 'h' for help.\n", command_char);
-            break;
-    }
-}
-
-void loop(double timeSec, double elapsedSec) {
-    draw();
-    
-    static double lastTime = 0;
-    static int initialized = 0;
-    
-    if (!initialized) {
-        show_help();
-        initialized = 1;
-    }
-    
-    if (timeSec - lastTime > 2.0) {
-        process_command();
-        lastTime = timeSec;
+        }
+        else 
+        {
+            printf("Position: (%d, %d) | Beepers counted: %d\n", 
+               karel_get_x(), karel_get_y(), beeperCount);
+        }
+        
+        
     }
 }
 ```
 
-## Key Learning Points
+## Key Concepts Demonstrated
 
-### Input Validation Techniques
+### 1. **Counting Logic**
 ```c
-// Always validate numeric input ranges
-if (count < 1 || count > 20) {
-    printf("Error: Invalid range\n");
-    return 0;
-}
-
-// Validate coordinates within world bounds
-if (x < 1 || x > WORLD_WIDTH || y < 1 || y > WORLD_HEIGHT) {
-    printf("Error: Out of bounds\n");
-    return 0;
+static int beeperCount = 0;
+if (beeper_present()) {
+    beeperCount++;  // Increment counter for each beeper found
 }
 ```
 
-### Format Specifiers for Output
-- `%d` - integers with optional width: `%5d`
-- `%c` - single characters
-- `%s` - strings with alignment: `%-10s`
-- `%.2f` - floating point with precision
-- `%p` - pointer addresses
-
-### Input Reading Best Practices
-- Use space before `%c` in scanf: `scanf(" %c", &char_var)`
-- Check return values: `if (scanf("%d", &num) != 1) { ... }`
-- Clear input buffer when necessary
-- Provide clear prompts for user guidance
-
-## Expected Interaction
+### 2. **Loop Control**
+```c
+static bool missionComplete = false;
+if (!missionComplete) {
+    // Continue execution
+}
 ```
-Enter command (h for help): m
-How many steps? 3
-Completed 3 out of 3 requested moves
 
-Enter command (h for help): s
-=== Karel Status ===
-Position: (4, 1)
-Facing: Est
-Beepers in bag: 0
-Front clear: Yes
-==================
+### 3. **Movement with Boundary Check**
+```c
+if (front_is_clear()) {
+    move();  // Continue moving
+} else {
+    // Wall reached, complete mission
+    missionComplete = true;
+}
 ```
+
+### 4. **Real-time Feedback**
+```c
+printf("Position: (%d, %d) | Beepers counted: %d\n", 
+       karel_get_x(), karel_get_y(), beeperCount);
+```
+
+## How It Works
+
+1. **Check for Beeper**: At each position, check if a beeper is present
+2. **Count**: If a beeper is found, increment the counter  
+3. **Move**: If the front is clear, move forward to continue counting
+4. **Complete**: When hitting a wall, display the final count and complete the mission
+5. **Display**: Show current position and running count for tracking progress
+
+## Expected Output
+
+```
+Position: (1, 1) | Beepers counted: 1
+Position: (2, 1) | Beepers counted: 2  
+Position: (3, 1) | Beepers counted: 2
+Position: (4, 1) | Beepers counted: 3
+Final count: 3 beepers total
+```
+
+## Debugging Tips
+1. **Check beeper detection** - verify `beeper_present()` works correctly
+2. **Monitor count increments** - ensure counter increases only when beepers are found
+3. **Test boundary conditions** - confirm proper stopping at walls
+4. **Verify output timing** - check that printf appears in real-time
+
+## Common Mistakes to Avoid
+- Incrementing count without checking for beeper presence
+- Moving without checking if front is clear
+- Not handling the wall boundary condition properly
+- Forgetting to mark mission as complete
+- Not handling phase transitions properly
+
+## Extensions
+- Count beepers in multiple rows
+- Implement different counting patterns (every other beeper, etc.)
+- Create visual counter displays using beeper arrangements
+- Add validation to verify counting accuracy
+
+## Learning Outcomes
+- **Abstract Counting**: Convert observations to numerical data
+- **Physical Representation**: Use beepers to represent abstract concepts
+- **Multi-Phase Logic**: Organize complex tasks into manageable phases
+- **State Management**: Track progress through different operational modes

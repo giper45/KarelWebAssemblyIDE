@@ -1,55 +1,191 @@
-#include <stdio.h>
+#include "karel.h"
+#define REFRESH_RATE 1.0
+#define MATRIX_SIZE 5
 
-// TODO: Create a function that swaps two integers using pointers
-// Function name: swap
-// Parameters: two integer pointers
-// Returns: void
+const char* DIRECTION_NAMES[] = {"East", "North", "West", "South"};
+void studentCode();
 
-// TODO: Create a function that finds the maximum element in an array using pointers
-// Function name: find_max_ptr
-// Parameters: pointer to array, size
-// Returns: pointer to the maximum element
+// Static 2D array to represent the world matrix
+static int world_matrix[MATRIX_SIZE][MATRIX_SIZE];
+static int total_beepers = 0;
 
-int main() {
-    // TODO: Declare variables and pointers
-    int num1 = 10, num2 = 20;
-    int *ptr1, *ptr2;
+void setup() {
+    karel_init();
+    karel_set_bag_beepers(0);
     
-    // TODO: Initialize pointers to point to the variables
+    // Place beepers in the actual world
+    karel_add_beeper(2, 5);  // Top row
+    karel_add_beeper(5, 5);
+    karel_add_beeper(3, 4);  // Second row
+    karel_add_beeper(1, 3);  // Third row
+    karel_add_beeper(4, 3);
+    karel_add_beeper(2, 2);  // Fourth row
+    karel_add_beeper(3, 1);  // Bottom row
     
-    // TODO: Print addresses and values
-    // - Print address of num1 and num2
-    // - Print values of ptr1 and ptr2 (addresses they store)
-    // - Print values pointed to by ptr1 and ptr2
-    
-    // TODO: Modify values through pointers
-    // Change num1 to 100 using ptr1
-    // Change num2 to 200 using ptr2
-    
-    // TODO: Test the swap function
-    printf("Before swap: num1=%d, num2=%d\n", num1, num2);
-    // Call swap function
-    printf("After swap: num1=%d, num2=%d\n", num1, num2);
-    
-    // TODO: Work with arrays and pointers
-    int arr[] = {5, 2, 8, 1, 9, 3};
-    int size = sizeof(arr) / sizeof(arr[0]);
-    
-    // TODO: Use pointer arithmetic to traverse the array
-    // Print all elements using pointer arithmetic
-    
-    // TODO: Find maximum element using the pointer function
-    
-    // TODO: Demonstrate the relationship between arrays and pointers
-    // Show that arr[i] is equivalent to *(arr + i)
-    
-    // TODO: Show pointer arithmetic
-    // - What happens when you add 1 to an int pointer?
-    // - What's the difference between ptr and ptr+1?
-    
-    return 0;
+    printf("Karel must use a 2D array to map and navigate the world\n");
 }
 
-// TODO: Implement the swap function here
+static double lastMoveTime = 0;
 
-// TODO: Implement the find_max_ptr function here
+void loop(double timeSec, double elapsedSec) {
+    if(timeSec - lastMoveTime > REFRESH_RATE) {
+        bool ready = drawWorld();
+        if (ready)
+            studentCode();
+        lastMoveTime = timeSec;
+    }
+}
+
+// TODO: Initialize the 2D matrix with beeper locations
+void initialize_matrix(int matrix[MATRIX_SIZE][MATRIX_SIZE]) {
+    printf("Initializing 2D matrix...\n");
+    
+    // TODO: First, initialize all cells to 0 (empty)
+    for (int row = 0; row < MATRIX_SIZE; row++) {
+        for (int col = 0; col < MATRIX_SIZE; col++) {
+            // TODO: Set all cells to 0
+        }
+    }
+    
+    // TODO: Set beeper locations to 1
+    // Beeper positions: (2,5), (5,5), (3,4), (1,3), (4,3), (2,2), (3,1)
+    // Convert Karel coordinates to array indices:
+    // Karel (x,y) → array[MATRIX_SIZE-y][x-1]
+    
+    // Example: Karel (2,5) → array[5-5][2-1] = array[0][1]
+    // TODO: Complete the matrix initialization
+}
+
+// TODO: Print the matrix in a readable format
+void print_matrix(int matrix[MATRIX_SIZE][MATRIX_SIZE]) {
+    printf("\n=== World Matrix (2D Array) ===\n");
+    printf("Array indices:  ");
+    for (int col = 0; col < MATRIX_SIZE; col++) {
+        printf("[%d] ", col);
+    }
+    printf("\n");
+    
+    for (int row = 0; row < MATRIX_SIZE; row++) {
+        printf("Row [%d]: ", row);
+        for (int col = 0; col < MATRIX_SIZE; col++) {
+            printf(" %d  ", matrix[row][col]);
+        }
+        
+        // Show corresponding Karel coordinates
+        int karel_y = MATRIX_SIZE - row;
+        printf("  ← Karel y=%d\n", karel_y);
+    }
+    
+    printf("\nLegend: 0=Empty, 1=Beeper, 2=Visited, 3=Karel\n");
+    printf("Karel coordinates: x=1-5, y=1-5\n\n");
+}
+
+// TODO: Convert Karel coordinates to array indices
+void karel_to_array_coords(int karel_x, int karel_y, int* array_row, int* array_col) {
+    // TODO: Implement coordinate conversion
+    // Karel (1,1) should map to array[4][0]
+    // Karel (5,5) should map to array[0][4]
+    
+    // Formula: array_row = MATRIX_SIZE - karel_y
+    //          array_col = karel_x - 1
+}
+
+// TODO: Check what value is in the matrix at Karel's current position
+int check_matrix_at_karel_position(int matrix[MATRIX_SIZE][MATRIX_SIZE]) {
+    int karel_x = karel_get_x();
+    int karel_y = karel_get_y();
+    
+    int array_row, array_col;
+    karel_to_array_coords(karel_x, karel_y, &array_row, &array_col);
+    
+    // TODO: Return the value at matrix[array_row][array_col]
+    return 0; // Placeholder
+}
+
+// TODO: Update matrix at Karel's position
+void update_matrix_at_karel_position(int matrix[MATRIX_SIZE][MATRIX_SIZE], int new_value) {
+    int karel_x = karel_get_x();
+    int karel_y = karel_get_y();
+    
+    int array_row, array_col;
+    karel_to_array_coords(karel_x, karel_y, &array_row, &array_col);
+    
+    // TODO: Set matrix[array_row][array_col] = new_value
+    printf("Updated matrix[%d][%d] = %d at Karel position (%d,%d)\n", 
+           array_row, array_col, new_value, karel_x, karel_y);
+}
+
+// Helper function to move Karel to specific position
+void move_to_position(int target_x, int target_y) {
+    // Simple movement implementation
+    while (karel_get_x() != target_x || karel_get_y() != target_y) {
+        if (karel_get_x() < target_x && front_is_clear()) {
+            // Face east and move
+            while (karel_get_direction() != 0) karel_turn_left();
+            karel_move();
+        } else if (karel_get_x() > target_x) {
+            // Face west and move
+            while (karel_get_direction() != 2) karel_turn_left();
+            if (front_is_clear()) karel_move();
+        } else if (karel_get_y() < target_y) {
+            // Face north and move
+            while (karel_get_direction() != 1) karel_turn_left();
+            if (front_is_clear()) karel_move();
+        } else if (karel_get_y() > target_y) {
+            // Face south and move
+            while (karel_get_direction() != 3) karel_turn_left();
+            if (front_is_clear()) karel_move();
+        }
+    }
+}
+
+// TODO: Main function to traverse matrix using 2D array
+void traverse_matrix_with_array(int matrix[MATRIX_SIZE][MATRIX_SIZE]) {
+    printf("Starting matrix traversal using 2D array...\n");
+    total_beepers = 0;
+    
+    // TODO: Use nested loops to traverse the matrix
+    // Outer loop: iterate through array rows (0 to MATRIX_SIZE-1)
+    // Inner loop: iterate through array columns (0 to MATRIX_SIZE-1)
+    
+    for (int row = 0; row < MATRIX_SIZE; row++) {
+        for (int col = 0; col < MATRIX_SIZE; col++) {
+            // TODO: Convert array indices back to Karel coordinates
+            int karel_x = col + 1;
+            int karel_y = MATRIX_SIZE - row;
+            
+            printf("Processing matrix[%d][%d] → Karel position (%d,%d)\n", 
+                   row, col, karel_x, karel_y);
+            
+            // TODO: Move Karel to this position
+            // TODO: Check if matrix indicates beeper should be here
+            // TODO: If beeper found, update matrix and increment counter
+            // TODO: Mark position as visited in matrix
+        }
+    }
+    
+    printf("Matrix traversal complete! Total beepers found: %d\n", total_beepers);
+}
+
+void studentCode() {
+    static bool traversal_complete = false;
+    
+    if (!traversal_complete) {
+        printf("Karel starting position: (%d, %d) - Direction: %s\n", 
+               karel_get_x(), karel_get_y(), DIRECTION_NAMES[karel_get_direction()]);
+        
+        // TODO: Initialize the 2D matrix
+        initialize_matrix(world_matrix);
+        
+        // TODO: Print the initial matrix
+        print_matrix(world_matrix);
+        
+        // TODO: Traverse the world using the matrix
+        traverse_matrix_with_array(world_matrix);
+        
+        // TODO: Print the final matrix state
+        print_matrix(world_matrix);
+        
+        traversal_complete = true;
+    }
+}

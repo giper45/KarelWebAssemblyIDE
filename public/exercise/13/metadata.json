@@ -1,0 +1,8 @@
+{
+  "id": 13,
+  "name": "Make Code Modular",
+  "description": "Break a problem into reusable functions.",
+  "category": "functions-scope",
+  "difficulty": "Medium",
+  "estimatedTime": "20 minutes"
+}

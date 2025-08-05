@@ -1,8 +1,0 @@
-{
-  "id": 21,
-  "name": "Karel Control Structures",
-  "description": "Master if-else, loops, and switch statements while programming Karel's decision-making behavior.",
-  "category": "control-structures",
-  "difficulty": "Intermediate",
-  "estimatedTime": "40 minutes"
-}

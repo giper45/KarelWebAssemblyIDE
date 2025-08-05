@@ -1,8 +1,8 @@
 {
   "id": 6,
-  "name": "Karel Input Processing",
-  "description": "Learn to read and process different types of input while controlling Karel's behavior based on commands.",
-  "category": "c-fundamentals",
-  "difficulty": "Beginner",
-  "estimatedTime": "30 minutes"
+  "name": "Count Beepers",
+  "description": "Count how many beepers are present in a straight line and simulate a counter using beeper placement.",
+  "category": "beeper-operations",
+  "difficulty": "Medium",
+  "estimatedTime": "20 minutes"
 }

@@ -31,8 +31,6 @@ Hit top wall → Destination reached!
 ### Solution
 ```c
 void studentCode() {
-    drawWorld();
-    
     if (front_is_clear()) {
         karel_move();
     } else if (facing_east()) {

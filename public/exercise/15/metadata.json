@@ -1,0 +1,8 @@
+{
+  "id": 15,
+  "name": "Command Sequence Array",
+  "description": "Store and execute a sequence of commands using arrays and function pointers.",
+  "category": "arrays-strings",
+  "difficulty": "Hard",
+  "estimatedTime": "30 minutes"
+}

@@ -1,0 +1,8 @@
+{
+  "id": 16,
+  "name": "Grid Navigation with 2D Arrays",
+  "description": "Use 2D arrays to represent and navigate through a grid world with obstacles.",
+  "category": "arrays-strings",
+  "difficulty": "Hard",
+  "estimatedTime": "35 minutes"
+}

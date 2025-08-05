@@ -1,44 +1,104 @@
-# Karel Scope & Global Variables
+# Repeat Path
 
-## Objective
-Understand variable scope, global vs local variables, and visibility rules by managing Karel's state information across multiple functions.
+Learn to use for loops to repeat sequences of movements efficiently and create predictable patterns.
 
-## Background
-Variable scope determines where variables can be accessed in your program:
-- **Global Variables**: Accessible throughout the entire program
-- **Local Variables**: Only accessible within their function
-- **Static Variables**: Retain values between function calls
-- **Function Parameters**: Local to the function, passed by value or reference
+## Problem Description
+Karel must move forward 3 cells, then turn around and move back 3 cells to return to the starting position. This complete sequence must be repeated 4 times total. Use a for loop to avoid code repetition and create clean, maintainable solutions.
 
-## Your Task
-1. Use global variables to track Karel's journey statistics
-2. Create functions with local variables for temporary calculations
-3. Demonstrate static variables that persist between function calls
-4. Show scope conflicts and variable shadowing
-5. Practice proper variable organization and naming
+## Initial Setup
+- Karel starts at position (1,1) facing East
+- No beepers are placed in the world
+- Karel has a clear path of 10 cells to move forward and backward
+- The goal is to demonstrate controlled repetition using loops
+
+## Learning Objectives
+1. **For Loop Mastery**: Learn to use for loops for exact repetition counts
+2. **Sequence Organization**: Break complex behavior into repeatable patterns
+3. **Direction Management**: Control Karel's orientation for bidirectional movement
+4. **Code Efficiency**: Replace repetitive code with loop structures
+
+## Expected Behavior
+1. **Forward Movement**: Move 3 cells forward (East)
+2. **Turn Around**: Execute 2 left turns to face West
+3. **Backward Movement**: Move 3 cells backward (West) to starting column
+4. **Reset Direction**: Execute 2 left turns to face East again
+5. **Repeat**: Perform this complete sequence 4 times
+
+## Movement Pattern
+```
+Start: (1,1) facing East
+
+Iteration 1:
+- Move East to (4,1)
+- Turn around to face West  
+- Move West back to (1,1)
+- Turn around to face East
+
+Iteration 2-4: Repeat the same pattern
+```
 
 ## Key Concepts
-- **Global Scope**: Variables declared outside all functions
-- **Function Scope**: Variables declared inside functions
-- **Block Scope**: Variables declared inside { } blocks
-- **Static Variables**: `static int count = 0;` - persist between calls
-- **Variable Shadowing**: Local variables hiding global ones
+### 1. **For Loop Structure**
+Use a for loop to repeat the movement sequence exactly 4 times:
+```c
+for (int i = 0; i < 4; i++) {
+    // Movement sequence here
+}
+```
 
-## Scope Applications with Karel
-- Global counters for total moves, turns, beepers collected
-- Local variables for function-specific calculations
-- Static variables for function call counting
-- Parameter passing for coordinate calculations
+### 2. **Turn Around Function**
+Create a helper function or use multiple left turns to reverse direction:
+```c
+// Turn 180 degrees (turn around)
+karel_turn_left();
+karel_turn_left();
+```
 
-## Karel State Management
-- Global position tracking and statistics
-- Local path-finding calculations
-- Static counters for operation frequencies
-- Function-specific temporary variables
+### 3. **Movement Counting**
+Use nested loops or repeated moves for the 3-cell forward/backward movement:
+```c
+// Move forward 3 cells
+for (int j = 0; j < 3; j++) {
+    karel_move();
+}
+```
 
-## Tips
-- Use global variables sparingly - only for truly global state
-- Prefer local variables when data is only needed in one function
-- Use static variables for counters that need to persist
-- Choose descriptive names to avoid scope confusion
-- Be careful of variable shadowing - use different names when possible
+## Expected Output
+```
+Starting iteration 1...
+Moving forward: Step 1 to (2,1)
+Moving forward: Step 2 to (3,1) 
+Moving forward: Step 3 to (4,1)
+Turning around to face West...
+Moving backward: Step 1 to (3,1)
+Moving backward: Step 2 to (2,1)
+Moving backward: Step 3 to (1,1)
+Turning around to face East...
+Iteration 1 complete!
+
+Starting iteration 2...
+[Pattern repeats 3 more times]
+
+All 4 iterations completed! Karel back at starting position.
+```
+
+## Task Requirements
+Complete the `studentCode()` function to:
+1. Use a for loop to repeat the sequence 4 times
+2. Move forward 3 cells in each iteration
+3. Turn around efficiently (180 degrees)
+4. Move backward 3 cells to return to start
+5. Reset direction to face East for next iteration
+6. Add progress tracking with printf statements
+
+## Hints
+- A complete "turn around" requires two left turns
+- You can use nested for loops: outer for iterations, inner for movements
+- Count your movements to ensure Karel moves exactly 3 cells each direction
+- Verify Karel ends at the same position and direction as started
+
+## Extensions
+- Modify to repeat 6 times instead of 4
+- Change the forward distance to 5 cells
+- Add beeper placement at the furthest point of each iteration
+- Create a variable pattern where distance increases each iteration

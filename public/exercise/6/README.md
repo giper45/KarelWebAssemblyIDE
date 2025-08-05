@@ -1,46 +1,48 @@
-# Karel Input Processing
+# Count Beepers Along the Street
 
 ## Objective
-Learn how to read and process user input to control Karel's behavior dynamically using scanf and formatted output.
+Learn to count beepers while moving through a street and display the total count.
 
 ## Background
-In this exercise, you'll create an interactive Karel program that:
-- **Reads commands** from user input to control Karel
-- **Processes different data types** (integers, characters, strings)
-- **Validates input** and handles errors gracefully
-- **Formats output** to provide clear feedback
-- **Creates interactive menus** for Karel control
+Karel is standing at the beginning of a street with an unknown number of beepers scattered along the path. Your task is to traverse the street, count all beepers encountered, and display the final count.
 
 ## Your Task
-1. Create a command system that reads user input to control Karel
-2. Process different types of input (move count, direction, commands)
-3. Validate user input and provide error messages
-4. Display formatted status information about Karel
-5. Build an interactive menu system for Karel operations
+Write code that makes Karel:
+1. Start at the beginning of the street
+2. Move through the street from left to right
+3. Count each beeper encountered (without picking them up)
+4. Continue until reaching the end wall
+5. Display the final count
 
-## Key Concepts
-- **scanf() for Input**: Read integers, characters, and strings
-- **Input Validation**: Check for valid ranges and types
-- **printf() Formatting**: Create aligned, readable output
-- **Interactive Loops**: Continuous command processing
-- **Error Handling**: Graceful response to invalid input
+## New Programming Concepts
+- **Counting Logic**: Track quantities using variables
+- **Sequential Processing**: Process items one by one in order
+- **Variable Updates**: Increment counters when conditions are met
 
-## Interactive Features You'll Build
-- Command menu for Karel operations
-- Dynamic movement based on user input
-- Beeper placement by user coordinates
-- Status reporting with formatted output
-- Error messages for invalid commands
+## Functions You'll Use
+- `beepers_present()` - Check if there's a beeper at current location
+- `front_is_clear()` - Navigate through the street
+- `karel_move()` - Move to next position
+- `printf()` - Display the count results
 
-## Karel Functions You'll Use
-- `karel_move()` - Execute movement commands
-- `karel_turn_left()` - Turn based on user direction input
-- `karel_put_beeper()` - Place beepers at user-specified locations
-- `karel_pick_beeper()` - Collect beepers on command
+## Strategy Suggestions
+1. **Count Without Collecting**: Check beepers but don't pick them up
+2. **Track Progress**: Use a variable to maintain count
+3. **Clear Reporting**: Provide status updates during counting
 
-## Tips
-- Always validate input ranges (e.g., coordinates within world bounds)
-- Use clear prompts to guide user input
-- Provide feedback for both successful and failed operations
-- Handle buffer issues when mixing scanf with other input functions
-- Use meaningful format specifiers for aligned output
+## Success Criteria
+- All beepers in the street should be counted
+- Karel should reach the end wall
+- The correct total count should be displayed
+- Clear feedback about the counting process
+
+## Code Structure
+Your `studentCode()` function should:
+1. Check current position for beepers and increment counter
+2. Move forward until wall is reached
+3. Display the final count when complete
+
+## Example Scenario
+- Street contains beepers at positions: 3, 5, 6, 8, 9
+- Karel counts: 5 beepers total
+- Output shows: "Total beepers counted: 5"

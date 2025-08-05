@@ -1,0 +1,8 @@
+{
+  "id": 11,
+  "name": "Check Every Box",
+  "description": "Check every box in a row and perform a conditional action",
+  "category": "loops-repetition",
+  "difficulty": "Medium",
+  "estimatedTime": "20 minutes"
+}

@@ -1,4 +1,5 @@
 #include "karel.h"
+#define REFRESH_RATE 1.0 // 1 second for smooth updates
 
 const char* DIRECTION_NAMES[] = {"Est", "Nord", "Ovest", "Sud"};
 void studentCode();
@@ -17,14 +18,15 @@ void setup() {
 static double lastMoveTime = 0;
 
 void loop(double timeSec, double elapsedSec) {
-    if(timeSec - lastMoveTime > 1.0) {
-        studentCode();
+    if(timeSec - lastMoveTime > REFRESH_RATE) { // Check frequently for smooth timing
+        bool ready = drawWorld();
+        if (ready)
+            studentCode();
         lastMoveTime = timeSec;
     }
 }
 
 void studentCode() {
-    drawWorld();
     
     // TODO: Implement beeper collection logic
     // 1. Check if beeper present at current position
@@ -34,5 +36,5 @@ void studentCode() {
     // 5. Stop when hitting wall
     
     printf("Karel position: (%d, %d) - Beepers in bag: %d\n", 
-           karel.x, karel.y, karel.bag_beepers);
+           karel_get_x(), karel_get_y(), karel_get_bag_beepers());
 }

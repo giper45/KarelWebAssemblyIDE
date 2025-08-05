@@ -1,0 +1,8 @@
+{
+  "id": 12,
+  "name": "Zig-Zag Fill",
+  "description": "Fill a rectangular area in a zig-zag pattern with beepers.",
+  "category": "loops-repetition",
+  "difficulty": "Hard",
+  "estimatedTime": "30 minutes"
+}

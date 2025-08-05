@@ -1,0 +1,8 @@
+{
+  "id": 8,
+  "name": "Find First Beeper and Stop",
+  "description": "Walk until you find the first beeper and stop there.",
+  "category": "conditional-logic",
+  "difficulty": "Medium",
+  "estimatedTime": "20 minutes"
+}

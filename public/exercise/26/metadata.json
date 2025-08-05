@@ -1,8 +1,0 @@
-{
-  "id": 26,
-  "name": "Karel Binary Search Algorithm",
-  "description": "Implement binary search algorithm using Karel to efficiently find beepers in a sorted world arrangement.",
-  "category": "basic-algorithms", 
-  "difficulty": "Advanced",
-  "estimatedTime": "45 minutes"
-}

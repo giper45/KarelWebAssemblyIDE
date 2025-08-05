@@ -1,0 +1,8 @@
+{
+  "id": 5,
+  "name": "Karel Places Beepers",
+  "description": "Karel starts with a certain number of beepers and must place one beeper in each square along the path.",
+  "category": "beeper-operations",
+  "difficulty": "Medium",
+  "estimatedTime": "20 minutes"
+}

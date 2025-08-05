@@ -6,8 +6,6 @@ This exercise demonstrates how to create precise geometric patterns using counti
 ## Complete Solution
 ```c
 void studentCode() {
-    drawWorld();
-    
     static int step = 0;      // Steps taken on current side
     static int side = 0;      // Which side of square (0-3)
     static bool squareComplete = false;

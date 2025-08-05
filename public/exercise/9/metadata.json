@@ -1,8 +1,8 @@
 {
   "id": 9,
-  "name": "Karel Function Library",
-  "description": "Create custom functions to extend Karel's capabilities and learn function definition, parameters, and return values.",
-  "category": "functions-scope",
-  "difficulty": "Intermediate",
-  "estimatedTime": "35 minutes"
+  "name": "Swap Beeper",
+  "description": "Pick up a beeper and move it to the first empty cell you find. Use conditions to decide where to place it and when to stop.",
+  "category": "conditional-logic",
+  "difficulty": "Hard",
+  "estimatedTime": "30 minutes"
 }

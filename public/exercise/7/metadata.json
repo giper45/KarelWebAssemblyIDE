@@ -1,8 +1,8 @@
 {
   "id": 7,
-  "name": "Karel Constants & Preprocessor",
-  "description": "Learn about constants, #define directives, and preprocessor usage while configuring Karel's world parameters.",
-  "category": "c-fundamentals",
-  "difficulty": "Beginner",
+  "name": "Avoid Obstacles",
+  "description": "Make Karel advance along a path avoiding obstacles using conditional logic.",
+  "category": "conditional-logic",
+  "difficulty": "Medium",
   "estimatedTime": "25 minutes"
 }

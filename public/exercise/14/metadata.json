@@ -1,8 +1,8 @@
 {
   "id": 14,
-  "name": "Karel String Operations", 
-  "description": "Learn string manipulation and character arrays while creating Karel command parsing and name management systems.",
+  "name": "Array of Positions",
+  "description": "Use arrays to store and visit specific positions in Karel's world.",
   "category": "arrays-strings",
-  "difficulty": "Intermediate",
-  "estimatedTime": "40 minutes"
+  "difficulty": "Medium",
+  "estimatedTime": "25 minutes"
 }
