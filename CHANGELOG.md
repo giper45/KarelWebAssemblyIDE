@@ -7,35 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2025-08-05
+
 ### Added
-- Modern web interface for Karel the Robot programming
-- ACE code editor with C++ support and syntax highlighting
-- WebAssembly compilation system with Clang/LLVM
-- Interactive canvas for Karel world visualization
-- Structured exercise system with categories
-- Navigable sidebar for exercise selection
-- Support for multiple keybindings (Vim, Emacs, Sublime)
-- Editor themes (Light, Dark, Classic)
-- Integrated terminal for output
-- Complete Karel API for movement, detection and beeper manipulation
-- Horizontal and vertical wall system
-- Real-time Karel world rendering
+- Documentation dialog system with help
+- code editor features with language support extensions
+- Comprehensive exercise system covering:
+  - C language fundamentals
+  - Functions and scope management  
+  - Arrays and string manipulation
+  - Control structures and conditional logic
+  - Basic algorithms and data structures
+- Karel robot visual improvements with WebAssembly icon-inspired design
+- Canvas rendering buffer system for smooth animations
+- Simulated environment for accurate state prediction
+- Multiple exercise categories with progressive difficulty
+- Enhanced Karel API with complete movement and detection capabilities
+- Improved robot rendering with directional arrows and styled appearance
+- karel command translated to English for better accessibility
 
-### Features
-- **Code Editor**: ACE editor with C++ highlighting, auto-completion and customizable keybindings
-- **WebAssembly Compilation**: In-browser C++ code compilation using Clang/LLVM
-- **Visual World**: 10x8 grid with Karel, beepers, walls and status information
-- **Exercise System**: Modular structure for progressive programming exercises
-- **Responsive Interface**: Modern design with Tailwind CSS optimized for desktop and mobile
-- **Fast Development**: Hot reload with Vite for rapid development
-
-### Technical Stack
-- **Frontend**: React 18 + Vite
-- **Styling**: Tailwind CSS 4.x
-- **Editor**: ACE Editor
-- **Compilation**: Clang/LLVM WebAssembly
-- **Canvas**: HTML5 Canvas API
-- **Build**: Vite with ES modules support
 
 ## [0.0.1] - 2025-08-03
 
