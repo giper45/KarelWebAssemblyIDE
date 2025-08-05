@@ -81,7 +81,7 @@ function App() {
   const [isActive, setIsActive] = useState(false)
   const [editorEventConfigured, setEditorEventConfigured] = useState(false)
   const [isHelpDialogOpen, setIsHelpDialogOpen] = useState(false)
-  const [loadingMessage, setLoadingMessage] = useState('Initializing...')
+  // const [loadingMessage, setLoadingMessage] = useState('Initializing...')
   const [editorInitialized, setEditorInitialized] = useState(false)
   const [activeTab, setActiveTab] = useState('readme');
   const editorRef = useRef(null)
@@ -95,6 +95,8 @@ function App() {
     exercises,
     loading,
     error,
+    loadingProgress,
+    loadingMessage,
     getExercisesByCategory,
     getPreviousExercise,
     getNextExercise,
@@ -300,14 +302,14 @@ function App() {
     if (!loading && canvasRef.current && currentExercise) {
       const loadAceScripts = async () => {
         try {
-          setLoadingMessage('Loading code editor...')
+          // setLoadingMessage('Loading code editor...')
           // Carica ACE base prima
           await loadScript('/lib/ace.js')
 
           // Aspetta che ace sia disponibile
           await waitForAce()
 
-          setLoadingMessage('Loading editor modules...')
+          // setLoadingMessage('Loading editor modules...')
           // Carica i moduli aggiuntivi
           await loadScript('/lib/mode-c_cpp.js')
           await loadScript('/lib/keybinding-vim.js')
@@ -315,7 +317,7 @@ function App() {
           await loadScript('/lib/ext-searchbox.js')
           await loadScript('/lib/ext-language_tools.js')
 
-          setLoadingMessage('Initializing editor...')
+          // setLoadingMessage('Initializing editor...')
           // Inizializza l'editor
           initializeEditor()
           setEditorInitialized(true)
@@ -696,7 +698,11 @@ function App() {
 
 
 
-      {loading && <div>Caricamento esercizi...</div>}
+      {loading && 
+      <LoadingSpinner 
+        message={loadingMessage}
+        progress={loadingProgress}
+      />}
       {/* Title Section */}
       {!loading && currentExercise && (
         <div className="flex flex-col flex-1 h-full w-full">

@@ -5,6 +5,10 @@ export const useExerciseData = () => {
   const [exercises, setExercises] = useState({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [loadingProgress, setLoadingProgress] = useState(0)
+  const [loadingMessage, setLoadingMessage] = useState("Loading exercises...")
+
+
 
   useEffect(() => {
     loadExerciseData()
@@ -13,6 +17,8 @@ export const useExerciseData = () => {
   const loadExerciseData = async () => {
     try {
       setLoading(true)
+      setLoadingProgress(0)
+      setLoadingMessage("Loading categories and exercises...")
       
       // Load categories
       const categoriesResponse = await fetch('/categories.json')
@@ -20,7 +26,12 @@ export const useExerciseData = () => {
       setCategories(categoriesData)
 
       // Load all exercises
+      const totalExercises = categoriesData.reduce((acc, category) => acc + category.exercises.length, 0)
+      setLoadingMessage(`Loading ${totalExercises} exercises...`)
+
+
       const exerciseData = {}
+      let loadedExercises = 0
       
       for (const category of categoriesData) {
         for (const exerciseId of category.exercises) {
@@ -52,19 +63,33 @@ export const useExerciseData = () => {
               // worldCode,
               exerciseCode
             }
+
+
+            loadedExercises++
+            const progress = Math.round((loadedExercises / totalExercises) * 100)
+            setLoadingProgress(progress)
+            setLoadingMessage(`Loaded ${loadedExercises} of ${totalExercises} exercises (${progress}%)`)
+
           } catch (err) {
             console.warn(`Failed to load exercise ${exerciseId}:`, err)
+            loadedExercises++
+            const progress = Math.round((loadedExercises / totalExercises) * 100)
+            setLoadingProgress(progress)
           }
         }
       }
       
       setExercises(exerciseData)
+      setLoadingMessage("All exercises loaded successfully!")
     } catch (err) {
       setError(err.message)
+      setLoadingMessage("Failed to load exercises.")
+
       console.error('Failed to load exercise data:', err)
     } finally {
-      console.log("CONCLUDED")
-      setLoading(false)
+      setTimeout(() => {
+        setLoading(false)
+      }, 500) // Delay to show final loading message
     }
   }
 
