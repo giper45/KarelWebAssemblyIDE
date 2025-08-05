@@ -13,7 +13,7 @@
     "name": "Beeper Operations",
     "concept": "Learn how to interact with beepers in Karel's world",
     "objectives": "Master beeper pickup and placement commands. Learn to detect beepers and use them to solve problems. Practice conditional logic based on beeper presence.",
-    "exercises": [4, 6]
+    "exercises": [4, 5, 6]
   },
   {
     "id": "conditional-logic",
@@ -21,7 +21,7 @@
     "name": "Conditional Logic", 
     "concept": "Use conditional statements to make Karel respond to different situations",
     "objectives": "Learn to use if statements with world sensing functions. Practice combining multiple conditions and creating responsive robot behavior.",
-    "exercises": [7, 8, 9]
+    "exercises": [7, 8]
   },
   {
     "id": "loops-repetition",
@@ -29,14 +29,24 @@
     "name": "Loops & Repetition",
     "concept": "Use loops to make Karel repeat actions efficiently",
     "objectives": "Master while loops and for loops. Learn to create efficient solutions that work for different world configurations. Practice loop design patterns.",
-    "exercises": [10, 11, 12]
+    "exercises": [9, 10, 11, 12]
   },
   {
-    "id": "problem-solving",
+    "id": "modular-programming",
     "icon": "🎯",
-    "name": "Problem Solving",
-    "concept": "Combine all Karel concepts to solve complex challenges",
-    "objectives": "Apply all learned concepts to solve multi-step problems. Practice breaking down complex tasks into simpler components. Develop algorithmic thinking skills.",
-    "exercises": [13, 14, 15]
+    "name": "Modular Programming",
+    "concept": "Break down complex tasks into smaller, manageable functions",
+    "objectives": "Learn to create and use functions to encapsulate behavior. Understand the importance of function reusability and modular design.",
+    "exercises": [13]
+  },
+  {
+  "id": "arrays",
+  "icon": "📊",
+  "name": "Arrays",
+  "concept": "Learn how to use arrays to store and manipulate collections of data",
+  "objectives": "Understand array creation, indexing, and manipulation. Learn to iterate over arrays using loops. Practice using arrays to solve problems involving collections of items.",
+  "exercises": [14, 15, 16, 17]
   }
+
+
 ]

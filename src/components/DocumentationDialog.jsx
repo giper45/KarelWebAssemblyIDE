@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/solid';
 import CodeDoc from './CodeDoc';
+import KarelIcon from './KarelIcon';
 
 const DocumentationDialog = ({ isOpen, onClose }) => {
   const [isVisible, setIsVisible] = useState(false);
@@ -58,6 +59,23 @@ const DocumentationDialog = ({ isOpen, onClose }) => {
     }
   }, [isOpen]);
 
+
+  // Keyboard event 
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    }
+
+      if (isOpen) {
+        document.addEventListener('keydown', handleKeyDown);
+      }
+      return () => {
+        document.removeEventListener('keydown', handleKeyDown);
+      };
+    }, [isOpen, onClose]);
+
   if (!isVisible) return null;
 
   return (
@@ -75,7 +93,12 @@ const DocumentationDialog = ({ isOpen, onClose }) => {
       >
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b border-gray-200">
-          <h2 className="text-3xl font-bold text-gray-900">Karel Documentation</h2>
+          <div className="flex flex-row items-center gap-2">
+            <KarelIcon 
+              className="w-12 h-12"
+            />
+            <h2 className="text-3xl font-bold text-gray-900">Karel Documentation</h2>
+          </div>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"

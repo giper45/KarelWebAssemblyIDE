@@ -24,7 +24,7 @@ void loop(double timeSec, double elapsedSec) {
     static double lastMoveTime = 0;
     
     // Check if Karel reached the corner
-    if (karel.x == WORLD_WIDTH && karel.y == WORLD_HEIGHT) {
+    if (karel_get_x() == WORLD_WIDTH && karel_get_y() == WORLD_HEIGHT) {
         reachedCorner = true;
         printf("Congratulations! Karel reached the corner!");
         return;

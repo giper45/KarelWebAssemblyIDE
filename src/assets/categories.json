@@ -13,15 +13,15 @@
     "name": "Functions & Scope",
     "concept": "Master functions, parameter passing, and variable scope in C",
     "objectives": "Learn function definition, declaration, and calling. Understand local vs global variables, scope rules, and parameter passing by value and reference.",
-    "exercises": [9, 10, 11, 12]
+    "exercises": [9, 10, 11, 12, 13]
   },
   {
     "id": "arrays-strings",
-    "icon": "�",
+    "icon": "📊",
     "name": "Arrays & Strings",
     "concept": "Work with arrays and string manipulation in C",
     "objectives": "Master array declaration, initialization, and manipulation. Learn string handling functions and character array operations.",
-    "exercises": [13, 14, 15, 16]
+    "exercises": [14, 15, 16, 17]
   },
   {
     "id": "pointers-memory",

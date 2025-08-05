@@ -1,4 +1,5 @@
 #include "karel.h"
+#define REFRESH_RATE 1.0 // 1 second for smooth updates
 #include <stdio.h>
 
 // Global constants - demonstrate const keyword
@@ -44,7 +45,7 @@ void loop(double timeSec, double elapsedSec) {
     
     static double lastMoveTime = 0;
     
-    if (timeSec - lastMoveTime > 1.0) {
+    if (timeSec - lastMoveTime > REFRESH_RATE) { // Check frequently for smooth timing
         // TODO: Make Karel move and count movements
         // If front is clear, move and increment move counter
         

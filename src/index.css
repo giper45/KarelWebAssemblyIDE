@@ -23,3 +23,19 @@ h5 {
 h6 {
     @apply text-base font-medium mt-1 mb-0.5;
 }
+
+ul {
+    @apply list-disc pl-6 mb-4;
+}
+
+ol {
+    @apply list-decimal pl-6 mb-4;
+}
+
+li {
+    @apply mb-1;
+}
+
+button {
+    @apply cursor-pointer;
+}

@@ -1,4 +1,5 @@
 #include "karel.h"
+#define REFRESH_RATE 1.0 // 1 second for smooth updates
 
 const char* DIRECTION_NAMES[] = {"Est", "Nord", "Ovest", "Sud"};
 
@@ -29,11 +30,11 @@ void loop(double timeSec, double elapsedSec) {
     
     static double lastMoveTime = 0;
     
-    if (timeSec - lastMoveTime > 0.6) {
+    if (timeSec - lastMoveTime > REFRESH_RATE) { // Check frequently for smooth timing
         // Check for beepers and collect them
         if (beepers_present()) {
             karel_pick_beeper();
-            printf("Beeper collected! Bag has %d beepers", karel.bag_beepers);
+            printf("Beeper collected! Bag has %d beepers", karel_get_bag_beepers());
         }
         
         // TODO: Student should implement systematic movement

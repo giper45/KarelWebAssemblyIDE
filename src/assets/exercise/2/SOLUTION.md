@@ -47,9 +47,9 @@ void loop(double timeSec, double elapsedSec) {
 ## Alternative Approach
 You could also navigate by coordinates:
 ```c
-if (karel.x < WORLD_WIDTH && facing_east()) {
+if (karel_get_x() < WORLD_WIDTH && facing_east()) {
     if (front_is_clear()) karel_move();
-} else if (karel.y < WORLD_HEIGHT) {
+} else if (karel_get_y() < WORLD_HEIGHT) {
     // Face north and move
     while (!facing_north()) karel_turn_left();
     if (front_is_clear()) karel_move();

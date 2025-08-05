@@ -57,3 +57,5 @@ karel_set_bag_beepers
 karel_set_beeper
 karel_init_js
 karel_add_beeper_js
+canvas_test
+canvas_sleep
