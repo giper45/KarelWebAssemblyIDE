@@ -312,6 +312,9 @@ function App() {
           await loadScript('/lib/mode-c_cpp.js')
           await loadScript('/lib/keybinding-vim.js')
 
+          await loadScript('/lib/ext-searchbox.js')
+          await loadScript('/lib/ext-language_tools.js')
+
           setLoadingMessage('Initializing editor...')
           // Inizializza l'editor
           initializeEditor()
@@ -367,8 +370,20 @@ function App() {
               wrap: true,
               maxLines: Infinity,
               autoScrollEditorIntoView: true,
-              showPrintMargin: false
+              showPrintMargin: false,
+              enableSearchTools: true,
+              // enableSnippets: true,
+              // enableEmmet: false
             })
+
+            //   // Enable search
+            // editor.commands.addCommand({
+            //   name: 'find',
+            //   bindKey: { win: 'Ctrl+F', mac: 'Command+F' },
+            //   exec: function(editor) {
+            //     editor.execCommand('find')
+            //   }
+            // })
 
             editor.setValue(currentExercise.exerciseCode, -1)
 
@@ -598,7 +613,7 @@ function App() {
   const resetLayout = async () => {
     // if (confirm('Really reset?')) {
     // setCode(initialProgram)
-    setTerminalOutput('');
+    // setTerminalOutput('');
     setIsActive(false);
     // if (window.editor) {
     //   window.editor.setValue(initialProgram, -1)
@@ -724,7 +739,7 @@ function App() {
             </div>
 
             {/* Canvas Panel */}
-            <div className="flex-1 w-full h-full shrink-0 bg-gray-50">
+            <div className="flex-1 w-1/2 h-full shrink-0 bg-gray-50">
               {/* <CanvasPanel /> */}
               <TabComponent
                 terminalOutput={terminalOutput}

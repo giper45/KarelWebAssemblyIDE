@@ -22,70 +22,262 @@ static inline void karel_printf(const char* format, ...) {
     fflush(stdout);
 }
 
-// Configurazione del mondo di Karel
+// Karel's world configuration
 #define WORLD_WIDTH 10
 #define WORLD_HEIGHT 8
 #define CELL_SIZE 60
 #define OFFSET_X 50
 #define OFFSET_Y 50
 
-// Stato di Karel
+
+#define KAREL_MOVE_BUFFER_SIZE 5000
+
+typedef enum {
+    KAREL_ACTION_MOVE,
+    KAREL_ACTION_TURN_LEFT,
+    KAREL_ACTION_PICK_BEEPER,
+    KAREL_ACTION_PUT_BEEPER
+} KarelActionType;
+
+
+typedef struct {
+    KarelActionType type;
+    // Eventually other parameters for future actions
+} KarelAction;
+
+
+typedef struct {
+    KarelAction actions[KAREL_MOVE_BUFFER_SIZE];
+    int front;  // Index of the first element
+    int rear;   // Index where to insert the next element
+    int count;  // Number of elements in the buffer
+} KarelActionBuffer;
+
+// Forward declaration - the actual struct is private
+typedef struct Karel Karel;
+// To check the conditions we implement a simulated state of Karel
+// This allows us to simulate Karel's actions without modifying the actual state
+// The buffer will be used after in the drawWorld function to render Karel each refresh rate
+typedef struct {
+    int x, y;
+    int direction;
+    bool beepers[WORLD_WIDTH + 1][WORLD_HEIGHT + 1];
+    int bag_beepers;
+} KarelSimulatedState;
+
+// Karel's state - INTERNAL USE ONLY
 struct Karel
 {
-    int x, y;                                        // Posizione (1-based come nel mondo di Karel)
-    int direction;                                   // 0=Est, 1=Nord, 2=Ovest, 3=Sud
-    bool beepers[WORLD_WIDTH + 1][WORLD_HEIGHT + 1]; // Beeper nel mondo
-    int bag_beepers;                                 // Beeper nella borsa di Karel
-    // Muri: true = muro presente
-    bool horizontal_walls[WORLD_WIDTH + 1][WORLD_HEIGHT + 2]; // Muri orizzontali (sopra ogni cella)
-    bool vertical_walls[WORLD_WIDTH + 2][WORLD_HEIGHT + 1];   // Muri verticali (a sinistra di ogni cella)
-};
+    int x, y;                                        // Position (1-based like in Karel's world)
+    int direction;                                   // 0=East, 1=North, 2=West, 3=South
+    bool beepers[WORLD_WIDTH + 1][WORLD_HEIGHT + 1]; // Beepers in the world
+    int bag_beepers;                                 // Beepers in Karel's bag
+    // Walls: true = wall present
+    bool horizontal_walls[WORLD_WIDTH + 1][WORLD_HEIGHT + 2]; // Horizontal walls (above each cell)
+    bool vertical_walls[WORLD_WIDTH + 2][WORLD_HEIGHT + 1];   // Vertical walls (to the left of each cell)
+} __attribute__((deprecated("Direct access to karel struct is discouraged. Use accessor functions instead.")));
 
-// Variabile globale Karel
-static Karel karel;  // ← DEFINIZIONE NELL'HEADER
+// Global Karel variable - INTERNAL USE ONLY  
+static Karel karel __attribute__((deprecated("Direct access to karel is discouraged. Use karel_get_x(), karel_get_y(), karel_get_direction(), karel_get_bag_beepers() instead.")));
+static KarelActionBuffer karel_buffer;
 
-// Direzioni
+
+// Advanced accessor functions that return simulated state (including pending actions)
+// Use these for logic that needs to account for buffered actions
+static inline int karel_get_x(void);
+static inline int karel_get_y(void);
+static inline int karel_get_bag_beepers(void);
+static inline KarelSimulatedState karel_simulate_state();
+
+// Control functions
+static inline bool karel_real_front_is_clear()
+{
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    int new_x = karel.x;
+    int new_y = karel.y;
+
+    switch (karel.direction)
+    {
+    case 0: // East
+        new_x++;
+        // Check vertical wall to the right of current cell
+        if (karel.vertical_walls[karel.x + 1][karel.y]) return false;
+        break;
+    case 1: // North
+        new_y++;
+        // Check horizontal wall above current cell
+        if (karel.horizontal_walls[karel.x][karel.y + 1]) return false;
+        break;
+    case 2: // West
+        new_x--;
+        // Check vertical wall to the left of current cell
+        if (karel.vertical_walls[karel.x][karel.y]) return false;
+        break;
+    case 3: // South
+        new_y--;
+        // Check horizontal wall below current cell
+        if (karel.horizontal_walls[karel.x][karel.y]) return false;
+        break;
+    }
+
+    return (new_x >= 1 && new_x <= WORLD_WIDTH && new_y >= 1 && new_y <= WORLD_HEIGHT);
+    #pragma GCC diagnostic pop
+}
+
+static inline void karel_buffer_init() {
+    karel_buffer.front = 0;
+    karel_buffer.rear = 0;
+    karel_buffer.count = 0;
+}
+
+static inline bool karel_buffer_is_empty() {
+    return karel_buffer.count == 0;
+}
+
+static inline bool karel_buffer_is_full() {
+    return karel_buffer.count >= KAREL_MOVE_BUFFER_SIZE;
+}
+
+static inline void karel_buffer_enqueue(KarelActionType action_type) {
+    if (karel_buffer_is_full()) {
+        // printf("Karel buffer is full! Cannot add more actions.\n");
+        return;
+    }
+    
+    karel_buffer.actions[karel_buffer.rear].type = action_type;
+    karel_buffer.rear = (karel_buffer.rear + 1) % KAREL_MOVE_BUFFER_SIZE;
+    karel_buffer.count++;
+    
+    // printf("Action enqueued. Buffer count: %d\n", karel_buffer.count);
+}
+
+static inline bool karel_buffer_dequeue(KarelAction* action) {
+    if (karel_buffer_is_empty()) {
+        return false;
+    }
+    
+    *action = karel_buffer.actions[karel_buffer.front];
+    karel_buffer.front = (karel_buffer.front + 1) % KAREL_MOVE_BUFFER_SIZE;
+    karel_buffer.count--;
+    
+    // printf("Action dequeued. Buffer count: %d\n", karel_buffer.count);
+    return true;
+}
+
+
+
+// Directions
 extern const char *DIRECTION_NAMES[];
 
-// Implementazioni inline
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+// Inline implementations
+// Internal initialization function that bypasses deprecation warnings
+
+static inline void karel_set_bag_beepers(int beepers) {
+    karel.bag_beepers = beepers;
+}
+static inline void karel_internal_init_state() {
+    // Initialize Karel
+    karel.x = 1;
+    karel.y = 1;
+    karel.direction = 0; // Facing East
+    karel.bag_beepers = 10;
+
+    // Initialize world without beepers
+    for (int i = 0; i <= WORLD_WIDTH; i++) {
+        for (int j = 0; j <= WORLD_HEIGHT; j++) {
+            karel.beepers[i][j] = false;
+        }
+    }
+    
+    // Initialize walls
+    for (int i = 0; i <= WORLD_WIDTH; i++) {
+        for (int j = 0; j <= WORLD_HEIGHT + 1; j++) {
+            karel.horizontal_walls[i][j] = false;
+        }
+    }
+    for (int i = 0; i <= WORLD_WIDTH + 1; i++) {
+        for (int j = 0; j <= WORLD_HEIGHT; j++) {
+            karel.vertical_walls[i][j] = false;
+        }
+    }
+    
+}
+
 
 static inline void karel_init()
 {
     canvas_setWidth(800);
     canvas_setHeight(600);
 
-    // Inizializza Karel
-    karel.x = 1;
-    karel.y = 1;
-    karel.direction = 0; // Guarda Est
-    karel.bag_beepers = 10;
+    // Initialize Karel
+    karel_internal_init_state();
 
-    // Inizializza il mondo senza beeper
-    for (int i = 0; i <= WORLD_WIDTH; i++)
-    {
-        for (int j = 0; j <= WORLD_HEIGHT; j++)
-        {
-            karel.beepers[i][j] = false;
-        }
-    }
-    
-    // Inizializza i muri
-    for (int i = 0; i <= WORLD_WIDTH; i++)
-    {
-        for (int j = 0; j <= WORLD_HEIGHT + 1; j++)
-        {
-            karel.horizontal_walls[i][j] = false;
-        }
-    }
-    for (int i = 0; i <= WORLD_WIDTH + 1; i++)
-    {
-        for (int j = 0; j <= WORLD_HEIGHT; j++)
-        {
-            karel.vertical_walls[i][j] = false;
-        }
+    karel_buffer_init();
+}
+
+
+
+static inline int karel_get_x(void) {
+    KarelSimulatedState simulated = karel_simulate_state();
+    return simulated.x;
+}
+
+static inline int karel_get_y(void) {
+    KarelSimulatedState simulated = karel_simulate_state();
+    return simulated.y;
+}
+static inline int karel_get_direction(void) {
+    KarelSimulatedState simulated = karel_simulate_state();
+    return simulated.direction;
+}
+static inline int karel_get_bag_beepers(void) {
+    KarelSimulatedState simulated = karel_simulate_state();
+    return simulated.bag_beepers;
+}
+
+static inline void karel_execute_action(KarelAction action) {
+
+    switch (action.type) {
+        case KAREL_ACTION_MOVE:
+            if (karel_real_front_is_clear()) {
+                switch (karel.direction) {
+                case 0: karel.x++; break; // East
+                case 1: karel.y++; break; // North
+                case 2: karel.x--; break; // West
+                case 3: karel.y--; break; // South
+                }
+            } 
+            break;
+            
+        case KAREL_ACTION_TURN_LEFT:
+            karel.direction = (karel.direction + 1) % 4;
+            break;
+            
+        case KAREL_ACTION_PICK_BEEPER:
+            if (karel.beepers[karel.x][karel.y]) {
+                karel.beepers[karel.x][karel.y] = false;
+                karel.bag_beepers++;
+            } 
+            break;
+            
+        case KAREL_ACTION_PUT_BEEPER:
+            if (karel.bag_beepers > 0) {
+                karel.beepers[karel.x][karel.y] = true;
+                karel.bag_beepers--;
+            } 
+            break;
     }
 }
 
+static inline void karel_process_next_action() {
+    KarelAction action;
+    if (karel_buffer_dequeue(&action)) {
+        karel_execute_action(action);
+    }
+}
 static inline void karel_add_beeper(int x, int y)
 {
     if (x >= 1 && x <= WORLD_WIDTH && y >= 1 && y <= WORLD_HEIGHT)
@@ -94,10 +286,10 @@ static inline void karel_add_beeper(int x, int y)
     }
 }
 
-// Funzioni per aggiungere muri
+// Functions to add walls
 static inline void karel_add_horizontal_wall(int x, int y, int length = 1)
 {
-    // Aggiunge muri orizzontali sopra le celle da (x, y) per 'length' celle lungo l'asse x
+    // Adds horizontal walls above cells from (x, y) for 'length' cells along the x-axis
     for (int i = 0; i < length; i++)
     {
         int wall_x = x + i;
@@ -110,7 +302,7 @@ static inline void karel_add_horizontal_wall(int x, int y, int length = 1)
 
 static inline void karel_add_vertical_wall(int x, int y, int length = 1)
 {
-    // Aggiunge muri verticali a sinistra delle celle da (x, y) per 'length' celle lungo l'asse y
+    // Adds vertical walls to the left of cells from (x, y) for 'length' cells along the y-axis
     for (int i = 0; i < length; i++)
     {
         int wall_y = y + i;
@@ -126,7 +318,7 @@ static inline void drawGrid()
     canvas_setStrokeStyleZ("lightgray");
     canvas_setLineWidth(1);
 
-    // Linee verticali
+    // Vertical lines
     for (int i = 0; i <= WORLD_WIDTH; i++)
     {
         double x = OFFSET_X + i * CELL_SIZE;
@@ -136,7 +328,7 @@ static inline void drawGrid()
         canvas_stroke();
     }
 
-    // Linee orizzontali
+    // Horizontal lines
     for (int j = 0; j <= WORLD_HEIGHT; j++)
     {
         double y = OFFSET_Y + j * CELL_SIZE;
@@ -146,7 +338,7 @@ static inline void drawGrid()
         canvas_stroke();
     }
 
-    // Bordo esterno più spesso
+    // Thicker outer border
     canvas_setStrokeStyleZ("black");
     canvas_setLineWidth(3);
     canvas_strokeRect(OFFSET_X, OFFSET_Y, WORLD_WIDTH * CELL_SIZE, WORLD_HEIGHT * CELL_SIZE);
@@ -157,7 +349,7 @@ static inline void drawWalls()
     canvas_setStrokeStyleZ("red");
     canvas_setLineWidth(4);
     
-    // Disegna muri orizzontali
+    // Draw horizontal walls
     for (int i = 1; i <= WORLD_WIDTH; i++)
     {
         for (int j = 1; j <= WORLD_HEIGHT + 1; j++)
@@ -176,7 +368,7 @@ static inline void drawWalls()
         }
     }
     
-    // Disegna muri verticali
+    // Draw vertical walls
     for (int i = 1; i <= WORLD_WIDTH + 1; i++)
     {
         for (int j = 1; j <= WORLD_HEIGHT; j++)
@@ -209,7 +401,7 @@ static inline void drawBeepers()
                 double x = OFFSET_X + (i - 1) * CELL_SIZE + CELL_SIZE / 2;
                 double y = OFFSET_Y + (WORLD_HEIGHT - j) * CELL_SIZE + CELL_SIZE / 2;
 
-                // Disegna un diamante (beeper)
+                // Draw a diamond (beeper)
                 canvas_beginPath();
                 canvas_moveTo(x, y - 15);
                 canvas_lineTo(x + 15, y);
@@ -222,67 +414,169 @@ static inline void drawBeepers()
     }
 }
 
+
 static inline void drawKarel()
 {
     double x = OFFSET_X + (karel.x - 1) * CELL_SIZE + CELL_SIZE / 2;
     double y = OFFSET_Y + (WORLD_HEIGHT - karel.y) * CELL_SIZE + CELL_SIZE / 2;
 
-    // Disegna il corpo di Karel (rettangolo)
-    canvas_setFillStyleZ("gray");
-    canvas_fillRect(x - 15, y - 10, 30, 20);
+    // Base/Dark purple pedestal raised (without body)
+    canvas_setFillStyleZ("#4C1D95");  // Dark purple
+    canvas_fillRect(x - 20, y - 15, 40, 30);  // Higher rectangle
+    
+    // Pedestal border for depth
+    canvas_setFillStyleZ("#3B1A78");
+    canvas_fillRect(x - 20, y - 15, 40, 3);   // Top
+    canvas_fillRect(x - 20, y - 15, 3, 30);   // Left
+    canvas_fillRect(x + 17, y - 15, 3, 30);   // Right
+    canvas_fillRect(x - 20, y + 12, 40, 3);   // Bottom
 
-    // Disegna la "faccia" di Karel (triangolo che indica la direzione)
-    canvas_setFillStyleZ("red");
+    // // "WA" text centered in the pedestal
+    // canvas_setFillStyleZ("white");
+    // canvas_setFontZ("bold 12px Arial");
+    // canvas_fillText("WA", 2, x - 10, y + 5);
+
+    // Dark blue head positioned above the purple rectangle
+    canvas_setFillStyleZ("#1E3A8A");  // Dark blue
+    canvas_fillRect(x - 15, y - 30, 30, 18);  // Main head
+    canvas_fillRect(x - 12, y - 32, 24, 4);   // Rounded top
+    canvas_fillRect(x - 10, y - 34, 20, 4);   // More rounded top
+
+    // // Dark gray metallic antennas
+    // canvas_setFillStyleZ("#4B5563");  // Dark gray metallic
+    // canvas_fillRect(x - 17, y - 36, 3, 8);    // Left antenna
+    // canvas_fillRect(x + 14, y - 36, 3, 8);    // Right antenna
+    
+    // // Antenna tips
+    // canvas_fillRect(x - 16, y - 38, 1, 4);    // Left tip
+    // canvas_fillRect(x + 15, y - 38, 1, 4);    // Right tip
+
+    // Eyes
+    canvas_setFillStyleZ("white");
+    canvas_fillRect(x - 12, y - 28, 6, 6);    // Left eye base
+    canvas_fillRect(x + 6, y - 28, 6, 6);     // Right eye base
+    
+    canvas_setFillStyleZ("#90EE90");  // Light green
+    canvas_fillRect(x - 11, y - 27, 4, 4);    // Left iris
+    canvas_fillRect(x + 7, y - 27, 4, 4);     // Right iris
+    
+    // Pupils removed for a simpler look
+
+    // Friendly smile
+    // canvas_setFillStyleZ("white");
+    // canvas_fillRect(x - 6, y - 20, 12, 2);    // Smile base
+    // canvas_fillRect(x - 5, y - 18, 2, 1);     // Left corner
+    // canvas_fillRect(x + 3, y - 18, 2, 1);     // Right corner
+    // Direction indicator - orange arrow more visible
+    canvas_setFillStyleZ("#eb0f0fff");  // Orange for contrast
+    
+    // Directional arrow based on direction using canvas_beginPath
+      // Directional arrow based on direction using canvas_beginPath
+    // Larger directional arrow moved laterally
     canvas_beginPath();
-
-    // Calcola i punti del triangolo in base alla direzione
-    double dx1, dy1, dx2, dy2, dx3, dy3;
-    switch (karel.direction)
-    {
-    case 0: // Est
-        dx1 = 15;
-        dy1 = 0;
-        dx2 = 25;
-        dy2 = -8;
-        dx3 = 25;
-        dy3 = 8;
+    switch (karel.direction) {
+    case 0: // East - arrow points right
+        canvas_moveTo(x + 30, y);        // Arrow tip (even further away)
+        canvas_lineTo(x + 21, y - 6);    // Upper side
+        canvas_lineTo(x + 24, y - 3);    // Upper indent
+        canvas_lineTo(x + 17, y - 3);    // Upper base
+        canvas_lineTo(x + 17, y + 3);    // Lower base
+        canvas_lineTo(x + 24, y + 3);    // Lower indent
+        canvas_lineTo(x + 21, y + 6);    // Lower side
         break;
-    case 1: // Nord
-        dx1 = 0;
-        dy1 = -15;
-        dx2 = -8;
-        dy2 = -25;
-        dx3 = 8;
-        dy3 = -25;
+    case 1: // North - arrow points up
+        canvas_moveTo(x, y - 50);        // Arrow tip (even higher)
+        canvas_lineTo(x - 6, y - 41);    // Left side
+        canvas_lineTo(x - 3, y - 44);    // Left indent
+        canvas_lineTo(x - 3, y - 37);    // Left base
+        canvas_lineTo(x + 3, y - 37);    // Right base
+        canvas_lineTo(x + 3, y - 44);    // Right indent
+        canvas_lineTo(x + 6, y - 41);    // Right side
         break;
-    case 2: // Ovest
-        dx1 = -15;
-        dy1 = 0;
-        dx2 = -25;
-        dy2 = -8;
-        dx3 = -25;
-        dy3 = 8;
+    case 2: // West - arrow points left
+        canvas_moveTo(x - 30, y);        // Arrow tip (even further away)
+        canvas_lineTo(x - 21, y - 6);    // Upper side
+        canvas_lineTo(x - 24, y - 3);    // Upper indent
+        canvas_lineTo(x - 17, y - 3);    // Upper base
+        canvas_lineTo(x - 17, y + 3);    // Lower base
+        canvas_lineTo(x - 24, y + 3);    // Lower indent
+        canvas_lineTo(x - 21, y + 6);    // Lower side
         break;
-    case 3: // Sud
-        dx1 = 0;
-        dy1 = 15;
-        dx2 = -8;
-        dy2 = 25;
-        dx3 = 8;
-        dy3 = 25;
+    case 3: // South - arrow points down
+        canvas_moveTo(x, y + 30);        // Arrow tip (even lower)
+        canvas_lineTo(x - 6, y + 21);    // Left side
+        canvas_lineTo(x - 3, y + 24);    // Left indent
+        canvas_lineTo(x - 3, y + 17);    // Left base
+        canvas_lineTo(x + 3, y + 17);    // Right base
+        canvas_lineTo(x + 3, y + 24);    // Right indent
+        canvas_lineTo(x + 6, y + 21);    // Right side
         break;
     }
-
-    canvas_moveTo(x + dx1, y + dy1);
-    canvas_lineTo(x + dx2, y + dy2);
-    canvas_lineTo(x + dx3, y + dy3);
     canvas_closePath();
     canvas_fill(FILL_RULE_NONZERO);
 }
 
+// static inline void drawKarel()
+// {
+//     double x = OFFSET_X + (karel.x - 1) * CELL_SIZE + CELL_SIZE / 2;
+//     double y = OFFSET_Y + (WORLD_HEIGHT - karel.y) * CELL_SIZE + CELL_SIZE / 2;
+
+//     // Draw Karel's body (rectangle)
+//     canvas_setFillStyleZ("gray");
+//     canvas_fillRect(x - 15, y - 10, 30, 20);
+
+//     // Draw Karel's "face" (triangle indicating direction)
+//     canvas_setFillStyleZ("red");
+//     canvas_beginPath();
+
+//     // Calculate triangle points based on direction
+//     double dx1, dy1, dx2, dy2, dx3, dy3;
+//     switch (karel.direction)
+//     {
+//     case 0: // East
+//         dx1 = 15;
+//         dy1 = 0;
+//         dx2 = 25;
+//         dy2 = -8;
+//         dx3 = 25;
+//         dy3 = 8;
+//         break;
+//     case 1: // North
+//         dx1 = 0;
+//         dy1 = -15;
+//         dx2 = -8;
+//         dy2 = -25;
+//         dx3 = 8;
+//         dy3 = -25;
+//         break;
+//     case 2: // West
+//         dx1 = -15;
+//         dy1 = 0;
+//         dx2 = -25;
+//         dy2 = -8;
+//         dx3 = -25;
+//         dy3 = 8;
+//         break;
+//     case 3: // South
+//         dx1 = 0;
+//         dy1 = 15;
+//         dx2 = -8;
+//         dy2 = 25;
+//         dx3 = 8;
+//         dy3 = 25;
+//         break;
+//     }
+
+//     canvas_moveTo(x + dx1, y + dy1);
+//     canvas_lineTo(x + dx2, y + dy2);
+//     canvas_lineTo(x + dx3, y + dy3);
+//     canvas_closePath();
+//     canvas_fill(FILL_RULE_NONZERO);
+// }
+
 static inline void drawInfo()
 {
-    // Informazioni su Karel
+    // Information about Karel
     canvas_setFillStyleZ("black");
     canvas_setFontZ("16px Arial");
     canvas_setTextAlign(TEXT_ALIGN_LEFT);
@@ -299,8 +593,9 @@ static inline void drawInfo()
     canvas_fillText(info, strlen(info), 300, 10);
 }
 
-static inline void drawWorld()
+static inline bool drawWorld()
 {
+    karel_process_next_action();
     canvas_setFillStyleZ("white");
     canvas_fillRect(0, 0, 800, 600);
     drawWalls();
@@ -308,112 +603,221 @@ static inline void drawWorld()
     drawBeepers();
     drawKarel();
     drawInfo();
+    return karel_buffer_is_empty();
 
 }
 
-static inline void drawWorldRect(f64 x, f64 y, f64 w, f64 h)
-{
-    canvas_setFillStyleZ("white");
-    canvas_fillRect(0, 0, 800, 600);
-    drawWalls();
-    drawGrid();
-    drawBeepers();
-    drawKarel();
-    drawInfo();
+// static inline void drawWorldRect(f64 x, f64 y, f64 w, f64 h)
+// {
+//     canvas_setFillStyleZ("white");
+//     canvas_fillRect(0, 0, 800, 600);
+//     drawWalls();
+//     drawGrid();
+//     drawBeepers();
+//     drawKarel();
+//     drawInfo();
 
-}
+// }
 
 
 static inline void karel_turn_left()
 {
-    karel.direction = (karel.direction + 1) % 4;
+    // karel.direction = (karel.direction + 1) % 4;
+    karel_buffer_enqueue(KAREL_ACTION_TURN_LEFT);
 }
 
 static inline void karel_pick_beeper()
 {
-    if (karel.beepers[karel.x][karel.y])
-    {
-        karel.beepers[karel.x][karel.y] = false;
-        karel.bag_beepers++;
-    }
+    karel_buffer_enqueue(KAREL_ACTION_PICK_BEEPER);
+    // if (karel.beepers[karel.x][karel.y])
+    // {
+    //     karel.beepers[karel.x][karel.y] = false;
+    //     karel.bag_beepers++;
+    // }
 }
 
 static inline void karel_put_beeper()
 {
-    if (karel.bag_beepers > 0)
-    {
-        karel.beepers[karel.x][karel.y] = true;
-        karel.bag_beepers--;
-    }
+    karel_buffer_enqueue(KAREL_ACTION_PUT_BEEPER);
+    // if (karel.bag_beepers > 0)
+    // {
+    //     karel.beepers[karel.x][karel.y] = true;
+    //     karel.bag_beepers--;
+    // }
 }
 
-// Funzioni di controllo
-static inline bool front_is_clear()
-{
-    int new_x = karel.x;
-    int new_y = karel.y;
 
-    switch (karel.direction)
-    {
-    case 0: // Est
+static inline void karel_move()
+{
+    karel_buffer_enqueue(KAREL_ACTION_MOVE);
+    // // Use front_is_clear() to check both walls and world boundaries
+    // if (front_is_clear())
+    // {
+    //     switch (karel.direction)
+    //     {
+    //     case 0:
+    //         karel.x++;
+    //         break; // East
+    //     case 1:
+    //         karel.y++;
+    //         break; // North
+    //     case 2:
+    //         karel.x--;
+    //         break; // West
+    //     case 3:
+    //         karel.y--;
+    //         break; // South
+    //     }
+    // }
+}
+
+
+
+/* CONDITIONS */
+
+static inline bool karel_simulated_front_is_clear(KarelSimulatedState* state) {
+    int new_x = state->x;
+    int new_y = state->y;
+
+    switch (state->direction) {
+    case 0: // East
         new_x++;
-        // Controlla muro verticale a destra della cella corrente
-        if (karel.vertical_walls[karel.x + 1][karel.y]) return false;
+        if (karel.vertical_walls[state->x + 1][state->y]) return false;
         break;
-    case 1: // Nord
+    case 1: // North
         new_y++;
-        // Controlla muro orizzontale sopra la cella corrente
-        if (karel.horizontal_walls[karel.x][karel.y + 1]) return false;
+        if (karel.horizontal_walls[state->x][state->y + 1]) return false;
         break;
-    case 2: // Ovest
+    case 2: // West
         new_x--;
-        // Controlla muro verticale a sinistra della cella corrente
-        if (karel.vertical_walls[karel.x][karel.y]) return false;
+        if (karel.vertical_walls[state->x][state->y]) return false;
         break;
-    case 3: // Sud
+    case 3: // South
         new_y--;
-        // Controlla muro orizzontale sotto la cella corrente
-        if (karel.horizontal_walls[karel.x][karel.y]) return false;
+        if (karel.horizontal_walls[state->x][state->y]) return false;
         break;
     }
 
     return (new_x >= 1 && new_x <= WORLD_WIDTH && new_y >= 1 && new_y <= WORLD_HEIGHT);
 }
 
-// Funzioni di movimento di Karel
-static inline void karel_move()
-{
-    // Usa front_is_clear() per controllare sia i muri che i limiti del mondo
-    if (front_is_clear())
-    {
-        switch (karel.direction)
-        {
-        case 0:
-            karel.x++;
-            break; // Est
-        case 1:
-            karel.y++;
-            break; // Nord
-        case 2:
-            karel.x--;
-            break; // Ovest
-        case 3:
-            karel.y--;
-            break; // Sud
+
+static inline KarelSimulatedState karel_simulate_state() {
+    KarelSimulatedState simulated = {
+        .x = karel.x,
+        .y = karel.y,
+        .direction = karel.direction,
+        .bag_beepers = karel.bag_beepers
+    };
+    
+    // Copy beeper state
+    for (int i = 0; i <= WORLD_WIDTH; i++) {
+        for (int j = 0; j <= WORLD_HEIGHT; j++) {
+            simulated.beepers[i][j] = karel.beepers[i][j];
         }
     }
+    
+    // Simulate all actions in the buffer
+    int temp_front = karel_buffer.front;
+    int temp_count = karel_buffer.count;
+    
+    for (int i = 0; i < temp_count; i++) {
+        int action_index = (temp_front + i) % KAREL_MOVE_BUFFER_SIZE;
+        KarelAction action = karel_buffer.actions[action_index];
+        
+        switch (action.type) {
+            case KAREL_ACTION_MOVE:
+                // Check if it can move (using simulated state)
+                if (karel_simulated_front_is_clear(&simulated)) {
+                    switch (simulated.direction) {
+                    case 0: simulated.x++; break; // East
+                    case 1: simulated.y++; break; // North
+                    case 2: simulated.x--; break; // West
+                    case 3: simulated.y--; break; // South
+                    }
+                }
+                break;
+                
+            case KAREL_ACTION_TURN_LEFT:
+                simulated.direction = (simulated.direction + 1) % 4;
+                break;
+                
+            case KAREL_ACTION_PICK_BEEPER:
+                if (simulated.beepers[simulated.x][simulated.y]) {
+                    simulated.beepers[simulated.x][simulated.y] = false;
+                    simulated.bag_beepers++;
+                }
+                break;
+                
+            case KAREL_ACTION_PUT_BEEPER:
+                if (simulated.bag_beepers > 0) {
+                    simulated.beepers[simulated.x][simulated.y] = true;
+                    simulated.bag_beepers--;
+                }
+                break;
+        }
+    }
+    
+    return simulated;
 }
 
 
-static inline bool beepers_present()
-{
-    return karel.beepers[karel.x][karel.y];
+
+static inline bool beepers_present() {
+    KarelSimulatedState simulated = karel_simulate_state();
+    return simulated.beepers[simulated.x][simulated.y];
 }
 
+static inline bool front_is_clear() {
+    KarelSimulatedState simulated = karel_simulate_state();
+    return karel_simulated_front_is_clear(&simulated);
+}
 
+static inline bool beepers_in_bag() {
+    KarelSimulatedState simulated = karel_simulate_state();
+    return simulated.bag_beepers > 0;
+}
 
-static inline bool facing_north() { return karel.direction == 1; }
-static inline bool facing_south() { return karel.direction == 3; }
-static inline bool facing_east() { return karel.direction == 0; }
-static inline bool facing_west() { return karel.direction == 2; }
+static inline bool facing_north() { 
+    KarelSimulatedState simulated = karel_simulate_state();
+    return simulated.direction == 1; 
+}
+
+static inline bool facing_south() { 
+    KarelSimulatedState simulated = karel_simulate_state();
+    return simulated.direction == 3; 
+}
+
+static inline bool facing_east() { 
+    KarelSimulatedState simulated = karel_simulate_state();
+    return simulated.direction == 0; 
+}
+
+static inline bool facing_west() { 
+    KarelSimulatedState simulated = karel_simulate_state();
+    return simulated.direction == 2; 
+}
+
+// Implementation of simulated accessor functions
+static inline int karel_get_simulated_x(void) {
+    KarelSimulatedState simulated = karel_simulate_state();
+    return simulated.x;
+}
+
+static inline int karel_get_simulated_y(void) {
+    KarelSimulatedState simulated = karel_simulate_state();
+    return simulated.y;
+}
+
+static inline int karel_get_simulated_direction(void) {
+    KarelSimulatedState simulated = karel_simulate_state();
+    return simulated.direction;
+}
+
+static inline int karel_get_simulated_bag_beepers(void) {
+    KarelSimulatedState simulated = karel_simulate_state();
+    return simulated.bag_beepers;
+}
+#pragma GCC diagnostic pop
+
 #endif // KAREL_H_
