@@ -142,6 +142,8 @@ export const useExerciseData = () => {
     exercises,
     loading,
     error,
+    loadingProgress,
+    loadingMessage,
     getExercisesByCategory,
     getExercise,
     getCategoryInfo,
