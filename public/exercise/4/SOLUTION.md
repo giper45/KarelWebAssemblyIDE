@@ -2,12 +2,14 @@
 
 ## Solution Explanation
 This exercise teaches conditional logic and safe movement by requiring Karel to collect scattered beepers while avoiding runtime errors.
+We introduce a "missionComplete" flag to track when Karel has finished collecting all beepers. The code uses a loop to continue moving and checking for beepers until Karel reaches the end of the street.
+Here's how the solution works:
 ```c
 void studentCode() {
     static bool missionComplete = false;
     static int totalCollected = 0;
     
-    if (!missionComplete) {
+    while (!missionComplete) {
         // Collect beeper if present
         if (beepers_present()) {
             karel_pick_beeper();
@@ -24,33 +26,33 @@ void studentCode() {
         }
     }
 }
+
+
 ```
 
-## Key Concepts Demonstrated
-
 ### 1. **Conditional Beeper Detection**
+To check the presence of a beeper in the current position, we use the `beepers_present()` function. This prevents Karel from trying to pick up a beeper when there isn't one, avoiding runtime errors.
+
 ```c
 if (beepers_present()) {
     karel_pick_beeper();  // Only pick when beeper exists
 }
 ```
+If there is a beeper, Karel picks it up and increments the `totalCollected` counter to keep track of how many beepers have been collected.
 
-### 2. **Safe Movement**
+
+### 2. **Safe Movement Control**
+In the while loop, we check if Karel can move forward using `front_is_clear()`. If the path is clear, Karel moves forward; otherwise, it stops and sets `missionComplete` to true.
 ```c
 if (front_is_clear()) {
     karel_move();  // Only move when path is clear
 } else {
     // Handle wall/obstacle
+    missionComplete = true;  // Stop when hitting a wall
+    printf("Reached the end of the street!\n");
 }
 ```
 
-### 3. **Mission State Tracking**
-```c
-static bool missionComplete = false;
-if (!missionComplete) {
-    // Continue collecting
-}
-```
 
 ### 4. **Error Prevention**
 - Always check `beepers_present()` before `karel_pick_beeper()`

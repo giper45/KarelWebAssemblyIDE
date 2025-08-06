@@ -1,5 +1,5 @@
 #include "karel.h"
-#define REFRESH_RATE 1.0
+#define REFRESH_RATE 0.5
 #define MATRIX_SIZE 5
 
 const char* DIRECTION_NAMES[] = {"East", "North", "West", "South"};
@@ -9,36 +9,26 @@ void studentCode();
 static int world_matrix[MATRIX_SIZE][MATRIX_SIZE];
 static int total_beepers = 0;
 
-void setup() {
-    karel_init();
-    karel_set_bag_beepers(0);
-    
-    // Place beepers in the actual world
-    karel_add_beeper(2, 5);  // Top row
-    karel_add_beeper(5, 5);
-    karel_add_beeper(3, 4);  // Second row
-    karel_add_beeper(1, 3);  // Third row
-    karel_add_beeper(4, 3);
-    karel_add_beeper(2, 2);  // Fourth row
-    karel_add_beeper(3, 1);  // Bottom row
-    
-    printf("Karel must use a 2D array to map and navigate the world\n");
-}
+
 
 static double lastMoveTime = 0;
-
-void loop(double timeSec, double elapsedSec) {
-    if(timeSec - lastMoveTime > REFRESH_RATE) {
+static int done = 0;
+void loop(double timeSec, double elapsedSec)
+{
+    if (timeSec - lastMoveTime > REFRESH_RATE)
+    { // Check frequently for smooth timing
         bool ready = drawWorld();
-        if (ready)
+        if (ready && !done)
             studentCode();
+        done = 1;
         lastMoveTime = timeSec;
     }
 }
 
+
 // TODO: Initialize the 2D matrix with beeper locations
 void initialize_matrix(int matrix[MATRIX_SIZE][MATRIX_SIZE]) {
-    printf("Initializing 2D matrix...\n");
+    karel_setup_printf("Initializing 2D matrix...\n");
     
     // TODO: First, initialize all cells to 0 (empty)
     for (int row = 0; row < MATRIX_SIZE; row++) {
@@ -58,26 +48,26 @@ void initialize_matrix(int matrix[MATRIX_SIZE][MATRIX_SIZE]) {
 
 // TODO: Print the matrix in a readable format
 void print_matrix(int matrix[MATRIX_SIZE][MATRIX_SIZE]) {
-    printf("\n=== World Matrix (2D Array) ===\n");
-    printf("Array indices:  ");
+    karel_setup_printf("\n=== World Matrix (2D Array) ===\n");
+    karel_setup_printf("Array indices:  ");
     for (int col = 0; col < MATRIX_SIZE; col++) {
-        printf("[%d] ", col);
+        karel_setup_printf("[%d] ", col);
     }
-    printf("\n");
+    karel_setup_printf("\n");
     
     for (int row = 0; row < MATRIX_SIZE; row++) {
-        printf("Row [%d]: ", row);
+        karel_setup_printf("Row [%d]: ", row);
         for (int col = 0; col < MATRIX_SIZE; col++) {
-            printf(" %d  ", matrix[row][col]);
+            karel_setup_printf(" %d  ", matrix[row][col]);
         }
         
         // Show corresponding Karel coordinates
         int karel_y = MATRIX_SIZE - row;
-        printf("  ← Karel y=%d\n", karel_y);
+        karel_setup_printf("Karel y=%d\n", karel_y);
     }
     
-    printf("\nLegend: 0=Empty, 1=Beeper, 2=Visited, 3=Karel\n");
-    printf("Karel coordinates: x=1-5, y=1-5\n\n");
+    karel_setup_printf("\nLegend: 0=Empty, 1=Beeper, 2=Visited, 3=Karel\n");
+    karel_setup_printf("Karel coordinates: x=1-5, y=1-5\n\n");
 }
 
 // TODO: Convert Karel coordinates to array indices
@@ -111,7 +101,7 @@ void update_matrix_at_karel_position(int matrix[MATRIX_SIZE][MATRIX_SIZE], int n
     karel_to_array_coords(karel_x, karel_y, &array_row, &array_col);
     
     // TODO: Set matrix[array_row][array_col] = new_value
-    printf("Updated matrix[%d][%d] = %d at Karel position (%d,%d)\n", 
+    karel_setup_printf("Updated matrix[%d][%d] = %d at Karel position (%d,%d)\n", 
            array_row, array_col, new_value, karel_x, karel_y);
 }
 
@@ -141,7 +131,7 @@ void move_to_position(int target_x, int target_y) {
 
 // TODO: Main function to traverse matrix using 2D array
 void traverse_matrix_with_array(int matrix[MATRIX_SIZE][MATRIX_SIZE]) {
-    printf("Starting matrix traversal using 2D array...\n");
+    karel_setup_printf("Starting matrix traversal using 2D array...\n");
     total_beepers = 0;
     
     // TODO: Use nested loops to traverse the matrix
@@ -154,7 +144,7 @@ void traverse_matrix_with_array(int matrix[MATRIX_SIZE][MATRIX_SIZE]) {
             int karel_x = col + 1;
             int karel_y = MATRIX_SIZE - row;
             
-            printf("Processing matrix[%d][%d] → Karel position (%d,%d)\n", 
+            karel_setup_printf("Processing matrix[%d][%d] -> Karel position (%d,%d)\n", 
                    row, col, karel_x, karel_y);
             
             // TODO: Move Karel to this position
@@ -164,21 +154,38 @@ void traverse_matrix_with_array(int matrix[MATRIX_SIZE][MATRIX_SIZE]) {
         }
     }
     
-    printf("Matrix traversal complete! Total beepers found: %d\n", total_beepers);
+    karel_setup_printf("Matrix traversal complete! Total beepers found: %d\n", total_beepers);
+}
+
+void setup() {
+    karel_init();
+    karel_set_bag_beepers(0);
+    
+    // Place beepers in the actual world
+    karel_add_beeper(2, 5);  // Top row
+    karel_add_beeper(5, 5);
+    karel_add_beeper(3, 4);  // Second row
+    karel_add_beeper(1, 3);  // Third row
+    karel_add_beeper(4, 3);
+    karel_add_beeper(2, 2);  // Fourth row
+    karel_add_beeper(3, 1);  // Bottom row
+    
+    karel_setup_printf("Karel must use a 2D array to map and navigate the world\n");
+    karel_setup_printf("Karel starting position: (%d, %d) - Direction: %s\n", 
+               karel_get_x(), karel_get_y(), DIRECTION_NAMES[karel_get_direction()]);
+        
+    // TODO: Initialize the 2D matrix
+    initialize_matrix(world_matrix);
+        
+    // TODO: Print the initial matrix
+    print_matrix(world_matrix);
+
 }
 
 void studentCode() {
     static bool traversal_complete = false;
     
     if (!traversal_complete) {
-        printf("Karel starting position: (%d, %d) - Direction: %s\n", 
-               karel_get_x(), karel_get_y(), DIRECTION_NAMES[karel_get_direction()]);
-        
-        // TODO: Initialize the 2D matrix
-        initialize_matrix(world_matrix);
-        
-        // TODO: Print the initial matrix
-        print_matrix(world_matrix);
         
         // TODO: Traverse the world using the matrix
         traverse_matrix_with_array(world_matrix);

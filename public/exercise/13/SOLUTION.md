@@ -26,9 +26,9 @@ void draw_square() {
 }
 
 void studentCode() {
-    static bool squareComplete = false;
+    bool squareComplete = false;
     
-    if (!squareComplete) {
+    while (!squareComplete) {
         draw_square();
         squareComplete = true;
         printf("Square completed using modular functions!\n");

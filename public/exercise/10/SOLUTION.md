@@ -1,6 +1,4 @@
 # Solution: Repeat Path
-
-## Solution Explanation
 This exercise demonstrates how to use **enums** and **state machines** to create clean, maintainable repetitive behavior. Karel performs a forward-backward movement pattern 4 times using enum-based phases to control the sequence precisely.
 
 ## Complete Solution
@@ -14,82 +12,73 @@ enum Phase {
 };
 
 void studentCode() {
-    static bool exerciseComplete = false;
-    static int currentIteration = 0;
-    static enum Phase currentPhase = MOVING_FORWARD;
-    static int steps = 0;
-    
-    if (!exerciseComplete && currentIteration < 4) {
-        switch (currentPhase) {
-            case MOVING_FORWARD:
-                if (steps == 0) {
-                    printf("Starting iteration %d...\n", currentIteration + 1);
-                }
-                if (steps < 3 && front_is_clear()) {
-                    karel_move();
-                    steps++;
-                    printf("Moving forward: Step %d to (%d,%d)\n", steps, karel_get_x(), karel_get_y());
-                    return;
-                } else {
-                    printf("Turning around to face West...\n");
-                    currentPhase = TURNING_AROUND;
-                    steps = 0;
-                    return;
-                }
-                break;
-                
-            case TURNING_AROUND:
-                if (steps < 2) {
-                    karel_turn_left();
-                    steps++;
-                    return;
-                } else {
-                    currentPhase = MOVING_BACKWARD;
-                    steps = 0;
-                    return;
-                }
-                break;
-                
-            case MOVING_BACKWARD:
-                if (steps < 3 && front_is_clear()) {
-                    karel_move();
-                    steps++;
-                    printf("Moving backward: Step %d to (%d,%d)\n", steps, karel_get_x(), karel_get_y());
-                    return;
-                } else {
-                    printf("Turning around to face East...\n");
-                    currentPhase = RESETTING_DIRECTION;
-                    steps = 0;
-                    return;
-                }
-                break;
-                
-            case RESETTING_DIRECTION:
-                if (steps < 2) {
-                    karel_turn_left();
-                    steps++;
-                    return;
-                } else {
-                    printf("Iteration %d complete!\n", currentIteration + 1);
-                    currentIteration++;
-                    currentPhase = MOVING_FORWARD;
-                    steps = 0;
-                    return;
-                }
-                break;
-                
-            case COMPLETE:
-                break;
+    bool exerciseComplete = false;
+    int currentIteration = 0;
+    enum Phase currentPhase = MOVING_FORWARD;
+    int steps = 0;
+    while (!exerciseComplete)
+        if (!exerciseComplete && currentIteration < 4) {
+            switch (currentPhase) {
+                case MOVING_FORWARD:
+                    if (steps == 0) {
+                        printf("Starting iteration %d...\n", currentIteration + 1);
+                    }
+                    if (steps < 3 && front_is_clear()) {
+                        karel_move();
+                        steps++;
+                        printf("Moving forward: Step %d to (%d,%d)\n", steps, karel_get_x(), karel_get_y());
+                    } else {
+                        printf("Turning around to face West...\n");
+                        currentPhase = TURNING_AROUND;
+                        steps = 0;
+                    }
+                    break;
+                    
+                case TURNING_AROUND:
+                    if (steps < 2) {
+                        karel_turn_left();
+                        steps++;
+                    } else {
+                        currentPhase = MOVING_BACKWARD;
+                        steps = 0;
+                    }
+                    break;
+                    
+                case MOVING_BACKWARD:
+                    if (steps < 3 && front_is_clear()) {
+                        karel_move();
+                        steps++;
+                        printf("Moving backward: Step %d to (%d,%d)\n", steps, karel_get_x(), karel_get_y());
+                    } else {
+                        printf("Turning around to face East...\n");
+                        currentPhase = RESETTING_DIRECTION;
+                        steps = 0;
+                    }
+                    break;
+                    
+                case RESETTING_DIRECTION:
+                    if (steps < 2) {
+                        karel_turn_left();
+                        steps++;
+                    } else {
+                        printf("Iteration %d complete!\n", currentIteration + 1);
+                        currentIteration++;
+                        currentPhase = MOVING_FORWARD;
+                        steps = 0;
+                    }
+                    break;
+                    
+                case COMPLETE:
+                    break;
+            }
+        } else if (!exerciseComplete) {
+            printf("All 4 iterations completed! Karel back at starting position.\n");
+            printf("Final position: (%d,%d) facing %s\n", karel_get_x(), karel_get_y(), DIRECTION_NAMES[karel_get_direction()]);
+            exerciseComplete = true;
         }
-    } else if (!exerciseComplete) {
-        printf("All 4 iterations completed! Karel back at starting position.\n");
-        printf("Final position: (%d,%d) facing %s\n", karel_get_x(), karel_get_y(), DIRECTION_NAMES[karel_get_direction()]);
-        exerciseComplete = true;
-    }
+    printf("Exercise completed!");
 }
 ```
-
-## Key Learning Concepts
 
 ### 1. **Why Use Enums Instead of Numbers?**
 ```c
@@ -136,8 +125,8 @@ Start: (1,1) facing East
 **4 iterations:** 24 moves + 16 turns = 40 actions
 
 ## Alternative Solution: Path-Based Approach
+An alternative solution could use a path-based approach, where Karel follows a predefined set of coordinates and directions. This method is more complex but allows for precise control over Karel's movements.
 
-For students who prefer thinking in terms of **predefined paths**, here's an alternative solution:
 
 ```c
 void studentCode() {
@@ -151,7 +140,7 @@ void studentCode() {
     static int targetDir[] = {0, 0, 0, 1, 2, 2, 2, 2, 0}; // Directions: 0=East, 1=North, 2=West
     static int pathLength = 9;
     
-    if (!exerciseComplete && currentIteration < 4) {
+    while (!exerciseComplete && currentIteration < 4) {
         if (pathStep == 0) {
             printf("Starting iteration %d...\n", currentIteration + 1);
         }
@@ -161,18 +150,15 @@ void studentCode() {
             if (karel_get_x() < targetX[pathStep] && front_is_clear()) {
                 karel_move();
                 printf("Moving to (%d,%d)\n", karel_get_x(), karel_get_y());
-                return;
             } else if (karel_get_x() > targetX[pathStep] && front_is_clear()) {
                 karel_move();
                 printf("Moving to (%d,%d)\n", karel_get_x(), karel_get_y());
-                return;
             }
         }
         
         // Check if we need to turn to target direction
         if (karel_get_direction() != targetDir[pathStep]) {
             karel_turn_left();
-            return;
         }
         
         // Move to next step in path
@@ -191,6 +177,7 @@ void studentCode() {
         }
     }
 }
+
 ```
 
 ## Comparison: State Machine vs Path-Based
@@ -298,24 +285,14 @@ Instead of trying to do everything at once, break it into clear steps:
 - Buffer systems prevent overwhelming the hardware
 - `return` statements create smooth, visible animations
 
-## Extensions to Try
+## Additonal Challenges
 
-### 🎯 Easy Modifications
+### Change the Movement Pattern
 - Change iterations from 4 to 6
 - Change distance from 3 to 5 cells
 - Add beeper placement at furthest point
 
-### 🎯 Advanced Challenges
+### Change the Direction
 - Variable distance each iteration (1, 2, 3, 4 cells)
 - Create a square pattern instead of linear
 - Add diagonal movement patterns
-
-## Summary
-
-This exercise teaches you to:
-1. **Use enums** for readable, maintainable state management
-2. **Design state machines** to break complex tasks into simple steps  
-3. **Respect timing systems** for smooth robot animation
-4. **Write professional code** that's easy to understand and modify
-
-The enum-based approach is more verbose than simple loops, but it's much more **maintainable** and **debuggable** - essential skills for real software development!

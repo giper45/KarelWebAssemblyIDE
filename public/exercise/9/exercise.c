@@ -1,10 +1,11 @@
 #include "karel.h"
-#define REFRESH_RATE 1.0 // 1 second for smooth updates
+#define REFRESH_RATE 0.5 // 1 second for smooth updates
 
-const char* DIRECTION_NAMES[] = {"Est", "Nord", "Ovest", "Sud"};
+const char *DIRECTION_NAMES[] = {"Est", "Nord", "Ovest", "Sud"};
 void studentCode();
 
-void setup() {
+void setup()
+{
     karel_init();
     // Initial beeper at position 3 (first beeper to pick up)
     karel_add_beeper(3, 1);
@@ -15,39 +16,43 @@ void setup() {
 }
 
 static double lastMoveTime = 0;
-
-void loop(double timeSec, double elapsedSec) {
-    if(timeSec - lastMoveTime > REFRESH_RATE) { // Check frequently for smooth timing
+static int done = 0;
+void loop(double timeSec, double elapsedSec)
+{
+    if (timeSec - lastMoveTime > REFRESH_RATE)
+    { // Check frequently for smooth timing
         bool ready = drawWorld();
-        if (ready) 
+        if (ready && !done)
             studentCode();
+        done = 1;
         lastMoveTime = timeSec;
     }
 }
 
-enum Phase {
-  SEARCHING_BEEPER,
-  SEARCHING_EMPTY_CELL,
-  COMPLETE
+enum Phase
+{
+    SEARCHING_BEEPER,
+    SEARCHING_EMPTY_CELL,
+    COMPLETE
 };
 
-
-void studentCode() {
+void studentCode()
+{
     static enum Phase currentPhase = SEARCHING_BEEPER;
 
-    switch (currentPhase) {
-        case SEARCHING_BEEPER:
-            // Implement searching for beeper logic
-            printf("Phase 1: Searching for beeper...\n");
-            break;
-        case SEARCHING_EMPTY_CELL:
-            printf("Phase 2: Searching for empty cell...\n");
-            // Implement searching for empty cell logic
-            break;
-        case COMPLETE:
-            printf("Phase 3: Operation complete!\n");
-            // Implement completion logic
-            break;
+    switch (currentPhase)
+    {
+    case SEARCHING_BEEPER:
+        // Implement searching for beeper logic
+        printf("Phase 1: Searching for beeper...\n");
+        break;
+    case SEARCHING_EMPTY_CELL:
+        printf("Phase 2: Searching for empty cell...\n");
+        // Implement searching for empty cell logic
+        break;
+    case COMPLETE:
+        printf("Phase 3: Operation complete!\n");
+        // Implement completion logic
+        break;
     }
-        
 }

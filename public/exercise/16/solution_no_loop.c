@@ -1,5 +1,5 @@
 #include "karel.h"
-#define REFRESH_RATE 1.0
+#define REFRESH_RATE 0.5
 #define REAL_WORLD_WIDTH 10
 #define REAL_WORLD_HEIGHT 8
 

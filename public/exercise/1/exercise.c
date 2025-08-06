@@ -1,14 +1,15 @@
 #include "karel.h"
-#define REFRESH_RATE 1.0 // 1 second for smooth updates
+#define REFRESH_RATE 0.5 // 1 second for smooth updates
 // Variabili globali di Karel
-const char* DIRECTION_NAMES[] = {"Est", "Nord", "Ovest", "Sud"};
+const char *DIRECTION_NAMES[] = {"Est", "Nord", "Ovest", "Sud"};
 void studentCode();
 
-void setup() {
+void setup()
+{
     // Initialize Karel and world
     karel_init();
-    
-    // Put some beeper 
+
+    // Put some beeper
     karel_add_beeper(3, 2);
     karel_add_beeper(5, 4);
     karel_add_beeper(7, 3);
@@ -18,22 +19,22 @@ void setup() {
 }
 
 static double lastMoveTime = 0;
-void loop(double timeSec, double elapsedSec) {
-    if(timeSec - lastMoveTime > REFRESH_RATE) { // Check frequently for smooth timing
+static int done = 0;
+void loop(double timeSec, double elapsedSec)
+{
+    if (timeSec - lastMoveTime > REFRESH_RATE)
+    { // Check frequently for smooth timing
         bool ready = drawWorld();
-        if (ready)
+        if (ready && !done)
             studentCode();
+        done = 1;
         lastMoveTime = timeSec;
     }
 }
 
 void studentCode()
 {
-    // Ora karel_move aggiunge azioni al buffer invece di muoversi immediatamente
-    for (int i = 0; i < 2; i++)
-    {
-        karel_move();
-    }
+    karel_move();
     karel_turn_left();
     karel_move();
 }

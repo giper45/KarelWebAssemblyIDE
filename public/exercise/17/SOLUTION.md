@@ -1,4 +1,4 @@
-# Solution: Matrici Bidimensionali con Karel
+# Solution: Bidimensional Arrays with Karel
 
 This exercise demonstrates how to work with 2D arrays (matrices) in C programming, using Karel to navigate and manipulate a matrix that represents the world state.
 
@@ -110,24 +110,24 @@ void traverse_matrix_with_array(int matrix[MATRIX_SIZE][MATRIX_SIZE]) {
 ### 4. Matrix Visualization
 ```c
 void print_matrix(int matrix[MATRIX_SIZE][MATRIX_SIZE]) {
-    printf("\n=== World Matrix (2D Array) ===\n");
-    printf("Array indices:  ");
+    karel_setup_printf("\n=== World Matrix (2D Array) ===\n");
+    karel_setup_printf("Array indices:  ");
     for (int col = 0; col < MATRIX_SIZE; col++) {
-        printf("[%d] ", col);
+        karel_setup_printf("[%d] ", col);
     }
-    printf("\n");
+    karel_setup_printf("\n");
     
     for (int row = 0; row < MATRIX_SIZE; row++) {
-        printf("Row [%d]: ", row);
+        karel_setup_printf("Row [%d]: ", row);
         for (int col = 0; col < MATRIX_SIZE; col++) {
-            printf(" %d  ", matrix[row][col]);
+            karel_setup_printf(" %d  ", matrix[row][col]);
         }
         
         int karel_y = MATRIX_SIZE - row;
-        printf("  ← Karel y=%d\n", karel_y);
+        karel_setup_printf("  ← Karel y=%d\n", karel_y);
     }
-    
-    printf("\nLegend: 0=Empty, 1=Beeper, 2=Visited\n\n");
+
+    karel_setup_printf("\nLegend: 0=Empty, 1=Beeper, 2=Visited\n\n");
 }
 ```
 

@@ -1,9 +1,7 @@
-# Matrici Bidimensionali con Karel
+# Bidimensional Arrays with Karel
 
-## Objective
 Learn to work with 2D arrays (matrices) in C programming. Karel will use a 2D array to map the world, store beeper locations, and navigate systematically through the matrix.
 
-## Background
 Bidimensional arrays (matrices) are fundamental data structures for representing 2D data like game boards, images, maps, and grids. This exercise teaches you how to declare, initialize, and manipulate 2D arrays in C.
 
 ## Your Task

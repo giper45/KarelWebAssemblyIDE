@@ -1,24 +1,14 @@
 # Avoid Obstacles
-
-## Objective
 Teach Karel how to navigate around obstacles using conditional logic and directional control.
-
-## Background
 Karel is at the beginning of a corridor containing several obstacles (walls). The task is to make Karel advance along the main path, avoiding each obstacle encountered by moving right when necessary.
+![World Map](/exercise/7/world.png)
 
-## Your Task
 Write code that allows Karel to:
 1. Advance along the main corridor (row 1)
 2. Detect when there's a wall ahead
 3. Navigate around the obstacle by moving right (up)
 4. Return to the main path after bypassing the obstacle
 5. Continue until reaching the end of the corridor
-
-## New Programming Concepts
-- **Complex Conditional Logic**: Combining multiple conditions to make decisions
-- **Obstacle Navigation**: Strategies for bypassing barriers
-- **Directional Control**: Managing Karel's direction in complex situations
-- **Avoidance Patterns**: Standard algorithms for obstacle evasion
 
 ## Functions You'll Use
 - `front_is_clear()` - Check if Karel can move forward

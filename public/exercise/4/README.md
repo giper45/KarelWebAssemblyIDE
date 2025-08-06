@@ -1,12 +1,13 @@
 # Collect All Beepers along the Street
+We introduce the "beeper", the most favourite item of Karel! Beepers are small objects that Karel can pick up and put down. In this exercise, you'll help Karel navigate a street filled with beepers.
 
-## Objective
 Navigate along a street and collect all beepers using conditional logic and proper movement control.
+Karel's world contains beepers scattered along a horizontal street. Your job is to guide Karel to systematically move through the street and collect every beeper found.  
 
-## Background
-Karel's world contains beepers scattered along a horizontal street. Your job is to guide Karel to systematically move through the street and collect every beeper found.
+![World Map](/exercise/4/world.png)
 
-## Your Task
+
+
 Write code that makes Karel:
 1. Move along the street from left to right
 2. Check each position for beepers

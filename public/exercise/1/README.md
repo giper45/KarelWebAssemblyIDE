@@ -1,13 +1,13 @@
-# Karel Welcome
-
-## Objective
-Learn how Karel moves in the world and practice basic navigation.
-
-## Background
-Karel is a simple robot that lives in a rectangular grid world. Karel can:
+# Welcome to Karel's World!
+Karel is a robot that can navigate a grid world, and in this exercise, you'll help Karel move around while avoiding walls.
+Karel lives in a rectangular grid world. Karel can:
 - Move forward one step with `karel_move()`
 - Turn 90 degrees left with `karel_turn_left()`
 - Check if the path ahead is clear with `front_is_clear()`
+- Pick up a beeper with `karel_pick_beeper()`
+- Put down a beeper with `karel_put_beeper()`
+
+See the documentation for more details on other functions.
 
 ## Your Task
 In this exercise, Karel starts at position (1,1) facing east. Your goal is to:
@@ -19,7 +19,6 @@ In this exercise, Karel starts at position (1,1) facing east. Your goal is to:
 Try to pick the first beeper under the wall. 
 
 
-## Functions You'll Use
 - `karel_move()` - Move forward one step
 - `karel_turn_left()` - Turn 90 degrees counter-clockwise  
 - `front_is_clear()` - Returns true if Karel can move forward

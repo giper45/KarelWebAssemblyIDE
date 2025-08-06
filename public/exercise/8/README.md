@@ -1,9 +1,6 @@
 # Find First Beeper and Stop
-
-## Objective
 Learn to use conditional loops to search for a specific target and stop when found.
 
-## Background
 Karel is standing at the beginning of a long street with beepers scattered at various positions. Your task is to make Karel walk forward until finding the first beeper, then stop at that position without picking it up.
 
 ## Your Task

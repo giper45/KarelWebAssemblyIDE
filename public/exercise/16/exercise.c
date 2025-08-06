@@ -26,15 +26,19 @@ void setup() {
 }
 
 static double lastMoveTime = 0;
-
-void loop(double timeSec, double elapsedSec) {
-    if (timeSec - lastMoveTime > REFRESH_RATE) {
+static int done = 0;
+void loop(double timeSec, double elapsedSec)
+{
+    if (timeSec - lastMoveTime > REFRESH_RATE)
+    { // Check frequently for smooth timing
         bool ready = drawWorld();
-        if (ready)
+        if (ready && !done)
             studentCode();
+        done = 1;
         lastMoveTime = timeSec;
     }
 }
+
 
 // 👇 Included to support 2D grid logic and debugging
 void print_world_state() {

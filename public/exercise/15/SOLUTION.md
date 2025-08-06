@@ -106,7 +106,7 @@ void studentCode() {
     
     int length = sizeof(sequence) / sizeof(sequence[0]);
     
-    if (!sequenceComplete && current_command < length) {
+    while (!sequenceComplete && current_command < length) {
         printf("Step %d: ", current_command + 1);
         execute_command(sequence[current_command]);
         current_command++;
@@ -120,6 +120,10 @@ void studentCode() {
 ```
 
 ## Advanced Solutions
+Try these advanced variations to enhance your understanding:
+* 1. Command with Parameters, where commands can take parameters like distance or direction.
+* 2. Conditional Commands, where commands execute only if certain conditions are met (e.g., `PICK_IF_PRESENT`).
+* 3. Loop Commands, allowing commands to repeat a specified number of times or until a condition is met.
 
 ### 1. Command with Parameters
 ```c

@@ -1,9 +1,5 @@
 # Karel Square Path
-
-## Objective
 Program Karel to walk in a perfect square pattern and return to the starting position.
-
-## Background
 This exercise teaches you how to create precise movement patterns using Karel's basic commands. You'll learn to coordinate movement and turning to create geometric shapes.
 
 ## Your Task
