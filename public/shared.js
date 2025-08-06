@@ -927,9 +927,11 @@ const API = (function () {
       return stillRunning ? app : null;
     }
     // Add method to stop current execution
-    stop() {
+    stop(stopCondition) {
       if (this.currentApp) {
-        this.hostWrite('\n\x1b[91mExecution stopped by user.\x1b[0m\n');
+        if (!stopCondition || stopCondition === 0) {
+          this.hostWrite('\n\x1b[91mExecution stopped by user.\x1b[0m\n');
+        }
         this.currentApp.allowRequestAnimationFrame = false;
         if (this.currentApp.animationId) {
           console.log("Cancel animation id " + this.currentApp.animationId)

@@ -7,6 +7,9 @@
 #include <string.h>
 #include <stdlib.h>
 
+#define KAREL_ERROR_START "\n\x1b[91m[KAREL_ERROR]"
+#define KAREL_ERROR_END "\x1b[0m\n"
+
 // Auto-flush printf for real-time output in WebAssembly
 #ifdef __EMSCRIPTEN__
     #define printf(...) do { printf(__VA_ARGS__); fflush(stdout); } while(0)
@@ -14,7 +17,7 @@
     #define printf(...) do { printf(__VA_ARGS__); fflush(stdout); } while(0)
 #endif
 
-static inline void karel_printf(const char* format, ...) {
+static inline void karel_setup_printf(const char* format, ...) {
     va_list args;
     va_start(args, format);
     vprintf(format, args);
@@ -31,6 +34,7 @@ static inline void karel_printf(const char* format, ...) {
 
 
 #define KAREL_MOVE_BUFFER_SIZE 5000
+
 
 typedef enum {
     KAREL_ACTION_MOVE,
@@ -88,6 +92,88 @@ static inline int karel_get_x(void);
 static inline int karel_get_y(void);
 static inline int karel_get_bag_beepers(void);
 static inline KarelSimulatedState karel_simulate_state();
+// Buffering KAREL strings
+#define KAREL_LOG_BUFFER_SIZE 1024
+#define KAREL_LOG_STRING_SIZE 512
+
+typedef struct {
+    char message[KAREL_LOG_STRING_SIZE];
+} KarelLogEntry;
+
+typedef struct {
+    KarelLogEntry entries[KAREL_LOG_BUFFER_SIZE];
+    int front;
+    int rear;
+    int count;
+} KarelLogBuffer;
+
+static KarelLogBuffer karel_log_buffer;
+
+typedef enum {
+    KAREL_BUFFER_ACTION,
+    KAREL_BUFFER_LOG
+} KarelBufferEntryType;
+
+typedef struct {
+    KarelBufferEntryType type;
+    union {
+        KarelAction action;
+        char log[KAREL_LOG_STRING_SIZE];
+    };
+} KarelUnifiedBufferEntry;
+
+#define KAREL_UNIFIED_BUFFER_SIZE 4096
+typedef struct {
+    KarelUnifiedBufferEntry entries[KAREL_UNIFIED_BUFFER_SIZE];
+    int front, rear, count;
+} KarelUnifiedBuffer;
+
+static KarelUnifiedBuffer karel_unified_buffer;
+
+static inline void karel_log_buffer_enqueue(const char* format, ...) {
+    if (karel_log_buffer.count >= KAREL_LOG_BUFFER_SIZE) return;
+    va_list args;
+    va_start(args, format);
+    vsnprintf(karel_log_buffer.entries[karel_log_buffer.rear].message, KAREL_LOG_STRING_SIZE, format, args);
+    va_end(args);
+    karel_log_buffer.rear = (karel_log_buffer.rear + 1) % KAREL_LOG_BUFFER_SIZE;
+    karel_log_buffer.count++;
+}
+
+static inline void karel_log_buffer_flush() {
+    while (karel_log_buffer.count > 0) {
+        printf("%s", karel_log_buffer.entries[karel_log_buffer.front].message);
+        karel_log_buffer.front = (karel_log_buffer.front + 1) % KAREL_LOG_BUFFER_SIZE;
+        karel_log_buffer.count--;
+    }
+}
+
+static inline void karel_log_buffer_flush_one() {
+    if (karel_log_buffer.count > 0) {
+        // Usa vprintf per evitare ricorsione se printf è ridefinito
+        #ifdef __EMSCRIPTEN__
+            #define printf(...) do { printf(__VA_ARGS__); fflush(stdout); } while(0)
+        #elif defined(__wasm__) || defined(__wasm32__)
+            #define printf(...) do { printf(__VA_ARGS__); fflush(stdout); } while(0)
+        #endif
+        // printf("karel_buffer_count: %d\n", karel_buffer.count);
+        // printf("Karel log buffer: %d entries\n", karel_log_buffer.count);
+        // printf("Karel log buffer front: %d, rear: %d\n", karel_log_buffer.front, karel_log_buffer.rear);
+        // printf("Karel buffer front : %d, rear: %d, count: %d\n", karel_buffer.front, karel_buffer.rear, karel_buffer.count);
+        // printf("%s", karel_log_buffer.entries[karel_log_buffer.front].message);
+        karel_log_buffer.front = (karel_log_buffer.front + 1) % KAREL_LOG_BUFFER_SIZE;
+        karel_log_buffer.count--;
+    }
+}
+#ifdef printf
+#undef printf
+#endif
+#define printf(...) karel_buffer_enqueue_log(__VA_ARGS__)
+
+// In drawWorld (o dove vuoi sincronizzare l'output), svuota il buffer:
+static inline void karel_flush_print_buffer() {
+    karel_log_buffer_flush();
+}
 
 // Control functions
 static inline bool karel_real_front_is_clear()
@@ -163,6 +249,25 @@ static inline bool karel_buffer_dequeue(KarelAction* action) {
     
     // printf("Action dequeued. Buffer count: %d\n", karel_buffer.count);
     return true;
+}
+
+static inline void karel_buffer_enqueue_action(KarelActionType action_type) {
+    if (karel_unified_buffer.count >= KAREL_UNIFIED_BUFFER_SIZE) return;
+    karel_unified_buffer.entries[karel_unified_buffer.rear].type = KAREL_BUFFER_ACTION;
+    karel_unified_buffer.entries[karel_unified_buffer.rear].action.type = action_type;
+    karel_unified_buffer.rear = (karel_unified_buffer.rear + 1) % KAREL_UNIFIED_BUFFER_SIZE;
+    karel_unified_buffer.count++;
+}
+
+static inline void karel_buffer_enqueue_log(const char* format, ...) {
+    if (karel_unified_buffer.count >= KAREL_UNIFIED_BUFFER_SIZE) return;
+    karel_unified_buffer.entries[karel_unified_buffer.rear].type = KAREL_BUFFER_LOG;
+    va_list args;
+    va_start(args, format);
+    vsnprintf(karel_unified_buffer.entries[karel_unified_buffer.rear].log, KAREL_LOG_STRING_SIZE, format, args);
+    va_end(args);
+    karel_unified_buffer.rear = (karel_unified_buffer.rear + 1) % KAREL_UNIFIED_BUFFER_SIZE;
+    karel_unified_buffer.count++;
 }
 
 
@@ -249,7 +354,9 @@ static inline void karel_execute_action(KarelAction action) {
                 case 2: karel.x--; break; // West
                 case 3: karel.y--; break; // South
                 }
-            } 
+            } else {
+                printf(KAREL_ERROR_START " Karel cannot move forward due to walls or boundaries!!!" KAREL_ERROR_END);
+            }
             break;
             
         case KAREL_ACTION_TURN_LEFT:
@@ -260,14 +367,18 @@ static inline void karel_execute_action(KarelAction action) {
             if (karel.beepers[karel.x][karel.y]) {
                 karel.beepers[karel.x][karel.y] = false;
                 karel.bag_beepers++;
-            } 
+            } else {
+                printf(KAREL_ERROR_START " Karel cannot pick up a beeper because there are none at the current position!!!" KAREL_ERROR_END);
+            }
             break;
             
         case KAREL_ACTION_PUT_BEEPER:
             if (karel.bag_beepers > 0) {
                 karel.beepers[karel.x][karel.y] = true;
                 karel.bag_beepers--;
-            } 
+            } else {
+                printf(KAREL_ERROR_START " Karel cannot put down a beeper because the bag is empty!!!" KAREL_ERROR_END);
+            }
             break;
     }
 }
@@ -277,6 +388,28 @@ static inline void karel_process_next_action() {
     if (karel_buffer_dequeue(&action)) {
         karel_execute_action(action);
     }
+}
+
+static inline void karel_process_action_log() {
+    if (karel_unified_buffer.count > 0) {
+        KarelUnifiedBufferEntry* entry = &karel_unified_buffer.entries[karel_unified_buffer.front];
+    if (entry->type == KAREL_BUFFER_ACTION) {
+        karel_execute_action(entry->action);
+    } else if (entry->type == KAREL_BUFFER_LOG) {
+        // Usa la vera printf qui!
+        #undef printf
+        #ifdef __EMSCRIPTEN__
+            #define printf(...) do { printf(__VA_ARGS__); fflush(stdout); } while(0)
+        #elif defined(__wasm__) || defined(__wasm32__)
+            #define printf(...) do { printf(__VA_ARGS__); fflush(stdout); } while(0)
+        #endif
+        printf("%s", entry->log);
+        #undef printf
+        #define printf(...) karel_buffer_enqueue_log(__VA_ARGS__)
+    }
+    karel_unified_buffer.front = (karel_unified_buffer.front + 1) % KAREL_UNIFIED_BUFFER_SIZE;
+    karel_unified_buffer.count--;
+}
 }
 static inline void karel_add_beeper(int x, int y)
 {
@@ -595,7 +728,9 @@ static inline void drawInfo()
 
 static inline bool drawWorld()
 {
-    karel_process_next_action();
+    // karel_process_next_action();
+    karel_process_action_log();
+    // karel_log_buffer_flush_one();
     canvas_setFillStyleZ("white");
     canvas_fillRect(0, 0, 800, 600);
     drawWalls();
@@ -603,7 +738,7 @@ static inline bool drawWorld()
     drawBeepers();
     drawKarel();
     drawInfo();
-    return karel_buffer_is_empty();
+    return karel_unified_buffer.count == 0;
 
 }
 
@@ -623,12 +758,12 @@ static inline bool drawWorld()
 static inline void karel_turn_left()
 {
     // karel.direction = (karel.direction + 1) % 4;
-    karel_buffer_enqueue(KAREL_ACTION_TURN_LEFT);
+    karel_buffer_enqueue_action(KAREL_ACTION_TURN_LEFT);
 }
 
 static inline void karel_pick_beeper()
 {
-    karel_buffer_enqueue(KAREL_ACTION_PICK_BEEPER);
+    karel_buffer_enqueue_action(KAREL_ACTION_PICK_BEEPER);
     // if (karel.beepers[karel.x][karel.y])
     // {
     //     karel.beepers[karel.x][karel.y] = false;
@@ -638,7 +773,7 @@ static inline void karel_pick_beeper()
 
 static inline void karel_put_beeper()
 {
-    karel_buffer_enqueue(KAREL_ACTION_PUT_BEEPER);
+    karel_buffer_enqueue_action(KAREL_ACTION_PUT_BEEPER);
     // if (karel.bag_beepers > 0)
     // {
     //     karel.beepers[karel.x][karel.y] = true;
@@ -649,7 +784,7 @@ static inline void karel_put_beeper()
 
 static inline void karel_move()
 {
-    karel_buffer_enqueue(KAREL_ACTION_MOVE);
+    karel_buffer_enqueue_action(KAREL_ACTION_MOVE);
     // // Use front_is_clear() to check both walls and world boundaries
     // if (front_is_clear())
     // {
@@ -718,43 +853,46 @@ static inline KarelSimulatedState karel_simulate_state() {
     }
     
     // Simulate all actions in the buffer
-    int temp_front = karel_buffer.front;
-    int temp_count = karel_buffer.count;
+    int temp_front = karel_unified_buffer.front;
+    int temp_count = karel_unified_buffer.count;
     
     for (int i = 0; i < temp_count; i++) {
-        int action_index = (temp_front + i) % KAREL_MOVE_BUFFER_SIZE;
-        KarelAction action = karel_buffer.actions[action_index];
+        int action_index = (temp_front + i) % KAREL_UNIFIED_BUFFER_SIZE;
+        KarelUnifiedBufferEntry entry = karel_unified_buffer.entries[action_index];
         
-        switch (action.type) {
-            case KAREL_ACTION_MOVE:
-                // Check if it can move (using simulated state)
-                if (karel_simulated_front_is_clear(&simulated)) {
-                    switch (simulated.direction) {
-                    case 0: simulated.x++; break; // East
-                    case 1: simulated.y++; break; // North
-                    case 2: simulated.x--; break; // West
-                    case 3: simulated.y--; break; // South
+        if (entry.type == KAREL_BUFFER_ACTION) 
+        {
+            switch ((KarelActionType) entry.action.type) {
+                case KAREL_ACTION_MOVE:
+                    // Check if it can move (using simulated state)
+                    if (karel_simulated_front_is_clear(&simulated)) {
+                        switch (simulated.direction) {
+                        case 0: simulated.x++; break; // East
+                        case 1: simulated.y++; break; // North
+                        case 2: simulated.x--; break; // West
+                        case 3: simulated.y--; break; // South
+                        }
                     }
-                }
-                break;
-                
-            case KAREL_ACTION_TURN_LEFT:
-                simulated.direction = (simulated.direction + 1) % 4;
-                break;
-                
-            case KAREL_ACTION_PICK_BEEPER:
-                if (simulated.beepers[simulated.x][simulated.y]) {
-                    simulated.beepers[simulated.x][simulated.y] = false;
-                    simulated.bag_beepers++;
-                }
-                break;
-                
-            case KAREL_ACTION_PUT_BEEPER:
-                if (simulated.bag_beepers > 0) {
-                    simulated.beepers[simulated.x][simulated.y] = true;
-                    simulated.bag_beepers--;
-                }
-                break;
+                    break;
+                    
+                case KAREL_ACTION_TURN_LEFT:
+                    simulated.direction = (simulated.direction + 1) % 4;
+                    break;
+                    
+                case KAREL_ACTION_PICK_BEEPER:
+                    if (simulated.beepers[simulated.x][simulated.y]) {
+                        simulated.beepers[simulated.x][simulated.y] = false;
+                        simulated.bag_beepers++;
+                    }
+                    break;
+                    
+                case KAREL_ACTION_PUT_BEEPER:
+                    if (simulated.bag_beepers > 0) {
+                        simulated.beepers[simulated.x][simulated.y] = true;
+                        simulated.bag_beepers--;
+                    }
+                    break;
+            }
         }
     }
     
