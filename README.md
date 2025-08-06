@@ -1,15 +1,15 @@
 # Karel WebAssembly IDE
 
-A modern, web-based integrated development environment for learning programming with Karel the Robot using C++ and WebAssembly.
+A modern, web-based integrated development environment for learning programming with Karel the Robot using C and WebAssembly.
 
 ## 🤖 About Karel
 
-Karel is a programming environment designed to teach fundamental programming concepts in a simple, visual way. Students write C++ code to control a robot (Karel) that moves around a grid world, picks up and puts down "beepers," and navigates around walls.
+Karel is a programming environment designed to teach fundamental programming concepts in a simple, visual way. Students write C code to control a robot (Karel) that moves around a grid world, picks up and puts down "beepers," and navigates around walls.
 
 ## 🚀 Features
 
 - **Modern Web IDE**: Full-featured code editor with syntax highlighting and multiple keybinding modes (Vim, Emacs, Sublime)
-- **Real-time Compilation**: C++ code is compiled to WebAssembly and executed directly in the browser
+- **Real-time Compilation**: C code is compiled to WebAssembly and executed directly in the browser
 - **Visual Feedback**: Interactive canvas showing Karel's world with grid, walls, beepers, and robot position
 - **Exercise System**: Structured learning path with categorized programming challenges
 - **Responsive Design**: Works seamlessly on desktop and mobile devices
@@ -19,7 +19,7 @@ Karel is a programming environment designed to teach fundamental programming con
 
 - **Frontend**: React 18 + Vite
 - **Styling**: Tailwind CSS
-- **Code Editor**: ACE Editor with C++ syntax highlighting
+- **Code Editor**: ACE Editor with C syntax highlighting
 - **Compilation**: Clang/LLVM compiled to WebAssembly
 - **Canvas Graphics**: HTML5 Canvas for Karel's world visualization
 - **Build Tool**: Vite for fast development and optimized builds
@@ -29,7 +29,7 @@ Karel is a programming environment designed to teach fundamental programming con
 This IDE is designed to teach:
 - Basic programming concepts (loops, conditionals, functions)
 - Problem decomposition and algorithmic thinking
-- C++ syntax and semantics
+- C syntax and semantics
 - Debugging and testing strategies
 - Structured programming practices
 
@@ -46,7 +46,7 @@ src/
 │   └── exercise/       # Exercise definitions and worlds
 public/
 ├── karel/
-├── clang               # WebAssembly-compiled C++ compiler
+├── clang               # WebAssembly-compiled C compiler
 ├── lld                 # WebAssembly linker
 └── memfs              # In-memory file system
 ```
