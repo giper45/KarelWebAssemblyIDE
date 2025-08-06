@@ -11,6 +11,7 @@ import React, { useState } from "react";
 
 function TabComponent({
   terminalOutput,
+  canvasTerminalOutput,
   canvasRef,
   readme,
   solution,
@@ -76,7 +77,7 @@ function TabComponent({
           />
         </div>
         <div className={activeTab === 'world' ? '' : 'hidden'}>
-          <CanvasPanel canvasRef={canvasRef} isActive={isActive} />
+          <CanvasPanel canvasRef={canvasRef} isActive={isActive} consoleOutput={canvasTerminalOutput} />
         </div>
         <div className={activeTab === 'terminal' ? '' : 'hidden'}>
           <Terminal output={terminalOutput} onClearTerminal={onClearTerminal} />

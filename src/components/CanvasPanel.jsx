@@ -1,8 +1,34 @@
 import React, { useRef, useEffect } from "react";
 
+function filter(output) {
+   // Remove all lines before "[0m test.wasm"
+    const lines = output.split('\n');
+    const startIdx = lines.findIndex(line => line.includes('[0m test.wasm'));
+    const filteredLines = startIdx >= 0 ? lines.slice(startIdx) : lines;
+
+    // For filtering lines, use pattern.test(line) instead of includes
+    return filteredLines.slice(2)
+        .join('\n');
+}
+const MiniTerminal = ({ consoleOutput }) => (
+    // Mini terminal at the bottom
+    filter(consoleOutput) !== "" ? (
+        <div className="w-full h-full px-4 pb-2">
+            <textarea
+                className="w-full h-full bg-black text-white font-mono text-xs rounded p-2 resize-none"
+                value={filter(consoleOutput)}
+                readOnly
+                rows={15}
+            />
+        </div>
+    ) : <div />
+);
+        
+
 const CanvasPanel = ({
     canvasRef,
-    isActive
+    isActive,
+    consoleOutput
 }) => {
     return (
         <div className="w-full min-h-full">
@@ -24,6 +50,7 @@ const CanvasPanel = ({
                             className="border-2 border-gray-800 bg-white rounded-lg shadow-lg max-w-full max-h-full"
                         />
                     </div>
+                    <MiniTerminal consoleOutput={consoleOutput} />
                 </div>
             </div>
         </div>

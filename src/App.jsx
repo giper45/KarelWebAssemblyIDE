@@ -77,6 +77,7 @@ function App() {
   const [theme, setTheme] = useState('github')
   const [showTiming, setShowTiming] = useState(false)
   const [terminalOutput, setTerminalOutput] = useState('')
+  const [canvasTerminalOutput, setCanvasTerminalOutput] = useState('')
   const [isRunning, setIsRunning] = useState(false)
   const [isActive, setIsActive] = useState(false)
   const [editorEventConfigured, setEditorEventConfigured] = useState(false)
@@ -121,9 +122,20 @@ function App() {
     });
   }
 
+  const checkForKarelError = (output) => {
+    const errorPattern = /\[KAREL_ERROR\] (.+)/;
+    const match = output.match(errorPattern);
+    if (match) {
+      const errorMessage = match[1];
+      // setTerminalOutput(prev => prev + `Error: ${errorMessage}\n`);
+      // setCanvasTerminalOutput(prev => prev + `Error: ${errorMessage}\n`);
+      console.error(`Karel Error: ${errorMessage}`);
+      handleKarelError();
+    }
+  }
+
   // Quando selezioni un esercizio dalla sidebar
   const handleExerciseSelect = (exercise) => {
-    console.log("Handle Exercise Select");
     setCurrentExercise(exercise);
     // setCurrentExerciseId(exercise.id);
     setIsSidebarOpen(false);
@@ -144,6 +156,7 @@ function App() {
 
   const handleClearTerminal = () => {
     setTerminalOutput('')
+    setCanvasTerminalOutput('')
   }
 
   // const resetWorld = async () => {
@@ -203,7 +216,7 @@ function App() {
   // Remove the local canvasRef, accept it as a prop instead
   // Remove this line: const canvasRef = useRef(null);
   useEffect(() => {
-    if (!loading && canvasRef.current && currentExercise) {
+    if (firstExerciseReady && canvasRef.current && currentExercise) {
       // if (canvasRef.current) {
       const canvas = canvasRef.current
       canvas.width = 800
@@ -215,7 +228,7 @@ function App() {
 
       setTerminalOutput(prev => prev + 'Canvas initialized.\n')
     }
-  }, [loading, canvasRef, currentExercise])
+  }, [firstExerciseReady, canvasRef, currentExercise])
 
 
       //   let code = ""
@@ -241,8 +254,6 @@ function App() {
       //   editor.setValue(exercise.exerciseCode)
   // When current exercise changes, compile the worldCode and update the editor page. In addition, change the stored code in the local storage
   useEffect(() => {
-    console.log("Before everything")
-    console.log(currentExercise)
     let localCode = null
     let localExercise = null 
     if (isCodePresentInLocalStorage())
@@ -256,15 +267,12 @@ function App() {
         localExercise.exerciseCode = localCode
       }
       setCurrentExercise(localExercise)
-      console.log("Set current work")
     }
     
   }, [])
   useEffect(() => {
-    console.log("In update editor")
     if (editorRef && editorRef.current && currentExercise && window.ace) {
       const editor = window.ace.edit(editorRef.current)
-      console.log(currentExercise.exerciseCode)
       let exerciseCode;
       // If undefined try to take from local storage, otherwise defaut exercise 1
       if (!currentExercise.exerciseCode)
@@ -303,8 +311,7 @@ function App() {
 
   // Inizializza ACE Editor
   useEffect(() => {
-    console.log("Init ACE")
-    if (!loading && canvasRef.current && currentExercise) {
+    if (firstExerciseReady && canvasRef.current && currentExercise) {
       const loadAceScripts = async () => {
         try {
           // setLoadingMessage('Loading code editor...')
@@ -423,7 +430,7 @@ function App() {
     }
 
 
-  }, [loading, canvasRef, currentExercise])
+  }, [firstExerciseReady, canvasRef, currentExercise])
 
   // Aggiorna keybinding quando cambia
   useEffect(() => {
@@ -481,6 +488,8 @@ function App() {
             },
             hostWrite: (output) => {
               setTerminalOutput(prev => prev + output)
+              setCanvasTerminalOutput(prev => prev + output)
+              checkForKarelError(output)
               // Auto-scroll terminal
               setTimeout(() => {
                 if (terminalRef.current) {
@@ -549,14 +558,13 @@ function App() {
   //   }
   // }, [])
 
-  const safeStop = async () => {
+  const safeStop = async (stopCondition = 0) => {
       const USER_STOP = 0xC1C1A
       try {
-        await apiRef.current.stop()
+        await apiRef.current.stop(stopCondition)
       }
       catch (error) {
         if (error.code == USER_STOP) {
-          console.log("OK - Safe exit by user")
           return 0
         }
       else {
@@ -596,10 +604,25 @@ function App() {
 
   }
 
-  const handleOpenFileClick = () => {
-    fileInputRef.current?.click()
-  }
+const handleDownloadFileClick = () => {
+  if (!window.editor || !currentExercise) return;
+  const code = window.editor.getValue();
+  // Usa il nome dell'esercizio senza spazi, fallback su "exercise"
+  const baseName = currentExercise.name
+    ? currentExercise.name.replace(/\s+/g, '_')
+    : 'exercise';
+  const filename = `${baseName.toLowerCase()}.c`;
+  const blob = new Blob([code], { type: 'text/x-csrc' });
+  const url = URL.createObjectURL(blob);
 
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
 
   const handleFileOpen = async (event) => {
     const file = event.target.files[0]
@@ -628,6 +651,12 @@ function App() {
     // apiRef.current.stop();
     await safeStop()
     // }
+  }
+
+  const handleKarelError = async () => {
+    setIsActive(false);
+    setActiveTab('terminal');
+    await safeStop(1);
   }
   const handleChangeTab = (tab) => {
     setActiveTab(tab);
@@ -674,7 +703,7 @@ const handleNextExercise = async () => {
     return currentIndex < Object.keys(exercises).length;
   };
 
-const showMainLoading = !firstExerciseReady;
+const showMainLoading = !firstExerciseReady && !editorInitialized;
 const showApp = firstExerciseReady && currentExercise;
 
   return (
@@ -690,7 +719,7 @@ const showApp = firstExerciseReady && currentExercise;
       {/* Sidebar */}
       <Sidebar
         // isOpen={isSidebarOpen}
-        isOpen={isSidebarOpen && sidebarReady}
+        isOpen={isSidebarOpen}
         onExerciseSelect={handleExerciseSelect}
         currentExerciseId={currentExercise?.id}
         categories={categories}
@@ -705,7 +734,7 @@ const showApp = firstExerciseReady && currentExercise;
       <Toolbar
         isRunning={isRunning}
         onRun={run}
-        onOpenFile={handleOpenFileClick}
+        onOpenFile={handleDownloadFileClick}
         keyboard={keyboard}
         onKeyboardChange={setKeyboard}
         showTiming={showTiming}
@@ -740,7 +769,7 @@ const showApp = firstExerciseReady && currentExercise;
             isRunning={isRunning}
             isActive={isActive}
             onRun={run}
-            onOpenFile={handleOpenFileClick}
+            onDownloadFile={handleDownloadFileClick}
             keyboard={keyboard}
             onKeyboardChange={setKeyboard}
             showTiming={showTiming}
@@ -771,6 +800,7 @@ const showApp = firstExerciseReady && currentExercise;
               {/* <CanvasPanel /> */}
               <TabComponent
                 terminalOutput={terminalOutput}
+                canvasTerminalOutput={canvasTerminalOutput}
                 canvasRef={canvasRef}
                 activeTab={activeTab}
                 onChangeTab={handleChangeTab}
