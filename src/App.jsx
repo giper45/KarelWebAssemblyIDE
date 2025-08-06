@@ -94,6 +94,8 @@ function App() {
     categories,
     exercises,
     loading,
+    sidebarReady,
+    firstExerciseReady,
     error,
     loadingProgress,
     loadingMessage,
@@ -101,6 +103,7 @@ function App() {
     getPreviousExercise,
     getNextExercise,
     getExercise,
+    loadExerciseOnDemand
 
   } = useExerciseData();
 
@@ -154,13 +157,15 @@ function App() {
   const canvasRef = useRef(null);
   // Aggiorna il codice quando cambia l'esercizio e i dati sono caricati
   useEffect(() => {
-    if (!loading && !currentExercise) {
-      setCurrentExercise(getExercise(1))
+    if (firstExerciseReady && !currentExercise) {
+
+      const initialId = isExercisePresentInLocalStorage() ? getCurrentExerciseFromLocalStorage()?.id : 1;
+      setCurrentExercise(getExercise(initialId))
       // if (currentExercise && currentExercise.exerciseCode) {
       //   setCode(currentExercise.exerciseCode);
       // }
     }
-  }, [loading]);
+  }, [firstExerciseReady, currentExercise, getExercise]);
 
   //   useEffect(() => {
   //   if (window.ace && editorRef.current && !editorEventConfigured) {
@@ -629,22 +634,35 @@ function App() {
   }
 
 
-  const handlePreviousExercise = () => {
-    const currentIndex = currentExercise.id;
-    if (currentIndex > 0) {
-      // const previousExercise = exercises[currentIndex - 1];
-      const previousExercise = getPreviousExercise(currentIndex)
+const handlePreviousExercise = async () => {
+  const currentIndex = currentExercise.id;
+  if (currentIndex > 1) {
+    let previousExercise = getPreviousExercise(currentIndex);
+    
+    // Se l'esercizio non è ancora caricato, caricalo
+    if (!previousExercise) {
+      previousExercise = await loadExerciseOnDemand(currentIndex - 1);
+    }
+    
+    if (previousExercise) {
       handleExerciseSelect(previousExercise);
     }
-  };
+  }
+};
 
-  const handleNextExercise = () => {
-    const currentIndex = currentExercise.id;
-    // const nextExercise = exercises[currentIndex + 1];
-    const nextExercise = getNextExercise(currentIndex)
+const handleNextExercise = async () => {
+  const currentIndex = currentExercise.id;
+  let nextExercise = getNextExercise(currentIndex);
+  
+  // Se l'esercizio non è ancora caricato, caricalo
+  if (!nextExercise) {
+    nextExercise = await loadExerciseOnDemand(currentIndex + 1);
+  }
+  
+  if (nextExercise) {
     handleExerciseSelect(nextExercise);
-  };
-
+  }
+};
   // Verifica se ci sono esercizi precedenti/successivi
   const hasPreviousExercise = () => {
     const currentIndex = currentExercise.id;
@@ -656,6 +674,8 @@ function App() {
     return currentIndex < Object.keys(exercises).length;
   };
 
+const showMainLoading = !firstExerciseReady;
+const showApp = firstExerciseReady && currentExercise;
 
   return (
     <div id="all" className="min-h-screen bg-gray-50 flex flex-col">
@@ -669,7 +689,8 @@ function App() {
       />
       {/* Sidebar */}
       <Sidebar
-        isOpen={isSidebarOpen}
+        // isOpen={isSidebarOpen}
+        isOpen={isSidebarOpen && sidebarReady}
         onExerciseSelect={handleExerciseSelect}
         currentExerciseId={currentExercise?.id}
         categories={categories}
@@ -698,13 +719,14 @@ function App() {
 
 
 
-      {loading && 
+      {showMainLoading &&  (
       <LoadingSpinner 
         message={loadingMessage}
         progress={loadingProgress}
-      />}
+      />
+      )}
       {/* Title Section */}
-      {!loading && currentExercise && (
+      {showApp && (
         <div className="flex flex-col flex-1 h-full w-full">
           <Title
             idExercise={currentExercise.id}
