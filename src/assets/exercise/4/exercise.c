@@ -1,5 +1,5 @@
 #include "karel.h"
-#define REFRESH_RATE 1.0 // 1 second for smooth updates
+#define REFRESH_RATE 0.5 // 1 second for smooth updates
 
 const char* DIRECTION_NAMES[] = {"Est", "Nord", "Ovest", "Sud"};
 
