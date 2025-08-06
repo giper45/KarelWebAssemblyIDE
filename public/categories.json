@@ -45,7 +45,7 @@
   "name": "Arrays",
   "concept": "Learn how to use arrays to store and manipulate collections of data",
   "objectives": "Understand array creation, indexing, and manipulation. Learn to iterate over arrays using loops. Practice using arrays to solve problems involving collections of items.",
-  "exercises": [14, 15, 16, 17]
+  "exercises": [14, 15, 16, 17, 18]
   }
 
 
