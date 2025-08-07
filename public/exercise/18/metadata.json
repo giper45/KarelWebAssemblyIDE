@@ -1,8 +1,8 @@
 {
   "id": 18,
-  "name": "Karel the adder",
-  "description": "Learn how to use bidimensional arrays in C with Karel.",
-  "category": "arrays",
-  "difficulty": "Medium",
-  "estimatedTime": "20 minutes"
+  "name": "Grid Navigation with 2D Arrays",
+  "description": "Use 2D arrays to represent and navigate through a grid world with obstacles.",
+  "category": "arrays-strings",
+  "difficulty": "Hard",
+  "estimatedTime": "35 minutes"
 }

@@ -17,6 +17,59 @@
     #define printf(...) do { printf(__VA_ARGS__); fflush(stdout); } while(0)
 #endif
 
+
+typedef struct {
+    FILE *file;
+    bool eof_written;
+} KarelFileState;
+
+
+#define KAREL_MAX_OPEN_FILES 32
+static KarelFileState karel_file_states[KAREL_MAX_OPEN_FILES];
+
+// Cerca lo stato associato al file
+static int karel_find_file_state(FILE *file) {
+    for (int i = 0; i < KAREL_MAX_OPEN_FILES; i++) {
+        if (karel_file_states[i].file == file)
+            return i;
+    }
+    return -1;
+}
+
+// Registra un nuovo file aperto
+static void karel_register_file(FILE *file) {
+    for (int i = 0; i < KAREL_MAX_OPEN_FILES; i++) {
+        if (karel_file_states[i].file == NULL) {
+            karel_file_states[i].file = file;
+            karel_file_states[i].eof_written = false;
+            return;
+        }
+    }
+}
+
+// Cancella lo stato del file chiuso
+static void karel_unregister_file(FILE *file) {
+    int idx = karel_find_file_state(file);
+    if (idx >= 0) {
+        karel_file_states[idx].file = NULL;
+        karel_file_states[idx].eof_written = false;
+    }
+}
+
+// Sostituisci fopen con karel_fopen
+static inline FILE* karel_fopen(const char *path, const char *mode) {
+    FILE *file = fopen(path, mode);
+    if (file) karel_register_file(file);
+    return file;
+}
+#ifdef fopen
+#undef fopen
+#endif
+#define fopen karel_fopen
+
+
+
+
 static inline void karel_setup_printf(const char* format, ...) {
     va_list args;
     va_start(args, format);
@@ -24,6 +77,97 @@ static inline void karel_setup_printf(const char* format, ...) {
     va_end(args);
     fflush(stdout);
 }
+
+
+// Funzione personalizzata per fprintf che fa flush immediato
+static inline int karel_fprintf(FILE *file, const char *format, ...) {
+    va_list args;
+    va_start(args, format);
+    int ret = vfprintf(file, format, args);
+    va_end(args);
+    fflush(file);
+    return ret;
+}
+
+// Macro per sostituire fprintf con la versione personalizzata
+#ifdef fprintf
+#undef fprintf
+#endif
+#define fprintf karel_fprintf
+
+/*
+// Funzione personalizzata per fputs che fa flush immediato
+static inline int karel_fputs(const char *str, FILE *file) {
+    return karel_fprintf(file, "%s", str);
+}
+
+// Macro per sostituire fputs con la versione personalizzata
+#ifdef fputs
+#undef fputs
+#endif
+#define fputs karel_fputs
+*/
+// Funzione personalizzata per fclose che scrive "EOF\n" prima di chiudere
+// static inline int karel_fclose(FILE *file) {
+//     fprintf(file, "EOF\n");
+//     fflush(file);
+//     return fclose(file);
+// }
+
+// Sostituisci fclose con karel_fclose
+static inline int karel_fclose(FILE *file) {
+    int idx = karel_find_file_state(file);
+    if (idx >= 0 && !karel_file_states[idx].eof_written) {
+        fprintf(file, "EOF\n");
+        fflush(file);
+        karel_file_states[idx].eof_written = true;
+    }
+    karel_unregister_file(file);
+    return fclose(file);
+}
+
+// // Macro per sostituire fclose con la versione personalizzata
+#ifdef fclose
+#undef fclose
+#endif
+#define fclose karel_fclose
+
+// Funzione personalizzata per fgets che si ferma su "EOF\n"
+static inline char* karel_fgets(char *buffer, int size, FILE *file) {
+    char *ret = fgets(buffer, size, file);
+    if (ret && strcmp(buffer, "EOF\n") == 0) return NULL;
+    return ret;
+}
+// Macro per sostituire fgets con la versione personalizzata
+#ifdef fgets
+#undef fgets
+#endif
+#define fgets karel_fgets
+
+static inline int karel_fgetc(FILE *file) {
+    static char line_buffer[256];
+    static int buffer_pos = 0;
+    static int buffer_len = 0;
+
+    // Se il buffer è vuoto, leggi una nuova riga
+    if (buffer_pos >= buffer_len) {
+        char *ret = karel_fgets(line_buffer, sizeof(line_buffer), file);
+        if (!ret) return EOF;
+        buffer_len = strlen(line_buffer);
+        buffer_pos = 0;
+    }
+
+    // Restituisci il prossimo carattere dal buffer
+    return (unsigned char)line_buffer[buffer_pos++];
+}
+#ifdef fgetc
+#undef fgetc
+#endif
+#define fgetc karel_fgetc
+
+
+
+
 
 // Karel's world configuration
 #define WORLD_WIDTH 10
@@ -34,6 +178,23 @@ static inline void karel_setup_printf(const char* format, ...) {
 
 
 #define KAREL_MOVE_BUFFER_SIZE 5000
+
+void karel_write_random_positions_to_file(const char *filename, int count) {
+    FILE *file = fopen(filename, "w");
+    if (!file) {
+        printf("[-] Cannot write file\n");
+        return;
+    }
+    
+    for (int i = 0; i < count; ++i) {
+        int x = (int)(canvas_getRandomNumber() * WORLD_WIDTH) + 1;
+        int y = (int)(canvas_getRandomNumber() * WORLD_HEIGHT) + 1;
+        fprintf(file, "%d,%d\n", x, y);
+    }
+
+    fclose(file);
+}
+
 
 
 typedef enum {
@@ -252,7 +413,10 @@ static inline bool karel_buffer_dequeue(KarelAction* action) {
 }
 
 static inline void karel_buffer_enqueue_action(KarelActionType action_type) {
-    if (karel_unified_buffer.count >= KAREL_UNIFIED_BUFFER_SIZE) return;
+    if (karel_unified_buffer.count >= KAREL_UNIFIED_BUFFER_SIZE) {
+        karel_setup_printf(KAREL_ERROR_START " Karel action buffer is full!!! Are you doing an infinite loop?" KAREL_ERROR_END);
+        return;
+    }
     karel_unified_buffer.entries[karel_unified_buffer.rear].type = KAREL_BUFFER_ACTION;
     karel_unified_buffer.entries[karel_unified_buffer.rear].action.type = action_type;
     karel_unified_buffer.rear = (karel_unified_buffer.rear + 1) % KAREL_UNIFIED_BUFFER_SIZE;
@@ -260,7 +424,11 @@ static inline void karel_buffer_enqueue_action(KarelActionType action_type) {
 }
 
 static inline void karel_buffer_enqueue_log(const char* format, ...) {
-    if (karel_unified_buffer.count >= KAREL_UNIFIED_BUFFER_SIZE) return;
+            karel_setup_printf(KAREL_ERROR_START " Karel log buffer is full!!! Are you doing an infinite loop?" KAREL_ERROR_END);
+    if (karel_unified_buffer.count >= KAREL_UNIFIED_BUFFER_SIZE) {
+        karel_setup_printf(KAREL_ERROR_START " Karel log buffer is full!!! Are you doing an infinite loop?" KAREL_ERROR_END);
+        return;
+    }
     karel_unified_buffer.entries[karel_unified_buffer.rear].type = KAREL_BUFFER_LOG;
     va_list args;
     va_start(args, format);
@@ -312,6 +480,7 @@ static inline void karel_internal_init_state() {
 }
 
 
+
 static inline void karel_init()
 {
     canvas_setWidth(800);
@@ -322,8 +491,6 @@ static inline void karel_init()
 
     karel_buffer_init();
 }
-
-
 
 static inline int karel_get_x(void) {
     KarelSimulatedState simulated = karel_simulate_state();
@@ -411,6 +578,7 @@ static inline void karel_process_action_log() {
     karel_unified_buffer.count--;
 }
 }
+
 static inline void karel_add_beeper(int x, int y)
 {
     if (x >= 1 && x <= WORLD_WIDTH && y >= 1 && y <= WORLD_HEIGHT)
@@ -446,6 +614,13 @@ static inline void karel_add_vertical_wall(int x, int y, int length = 1)
     }
 }
 
+static inline void karel_put_beepers_random_positions(int count) {
+    for (int i = 0; i < count; i++) {
+        int x = (int)(canvas_getRandomNumber() * WORLD_WIDTH) + 1;
+        int y = (int)(canvas_getRandomNumber() * WORLD_HEIGHT) + 1;
+        karel_add_beeper(x, y);
+    }
+}
 static inline void drawGrid()
 {
     canvas_setStrokeStyleZ("lightgray");
@@ -785,25 +960,6 @@ static inline void karel_put_beeper()
 static inline void karel_move()
 {
     karel_buffer_enqueue_action(KAREL_ACTION_MOVE);
-    // // Use front_is_clear() to check both walls and world boundaries
-    // if (front_is_clear())
-    // {
-    //     switch (karel.direction)
-    //     {
-    //     case 0:
-    //         karel.x++;
-    //         break; // East
-    //     case 1:
-    //         karel.y++;
-    //         break; // North
-    //     case 2:
-    //         karel.x--;
-    //         break; // West
-    //     case 3:
-    //         karel.y--;
-    //         break; // South
-    //     }
-    // }
 }
 
 

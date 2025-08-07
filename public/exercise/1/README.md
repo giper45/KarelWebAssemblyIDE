@@ -10,13 +10,13 @@ Karel lives in a rectangular grid world. Karel can:
 See the documentation for more details on other functions.
 
 ## Your Task
-In this exercise, Karel starts at position (1,1) facing east. Your goal is to:
+In this exercise, you do not have tasks!
+Karel starts at position (1,1) facing east. Your main goal is to:
 1. Make Karel move around the world
 2. Practice avoiding walls by checking `front_is_clear()` before moving
 3. Use `karel_turn_left()` to change direction when hitting a wall
 
-
-Try to pick the first beeper under the wall. 
+Try to pick the first beeper under the wall.
 
 
 - `karel_move()` - Move forward one step
@@ -27,3 +27,7 @@ Try to pick the first beeper under the wall.
 - Always check if the front is clear before moving
 - Turn left when you can't move forward
 - Watch Karel navigate around the world automatically
+
+## Documentation
+Look at `SOLUTION.md` for a tutorial on how to use Karel's functions.
+Also on the top right corner, you can find a button to see the documentation for all Karel's functions.

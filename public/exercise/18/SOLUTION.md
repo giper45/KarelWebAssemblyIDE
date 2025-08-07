@@ -1,419 +1,399 @@
-# Karel the adder
-We show a "bottom-up" approach to solving the problem of counting beepers in a grid using a bidimensional array.
+# Solution: Grid Navigation with 2D Arrays
 
-NOTE: 
-To speed-up the execution, you can modify the `REFRESH_RATE` variable in the `exercise.c` file to a lower value, like `0.01`. This will make Karel move faster and complete the exercise more quickly.
+## Solution Explanation
+This exercise demonstrates how to use 2D arrays for spatial representation and implement pathfinding algorithms. The solution combines grid representation with navigation logic to solve a complex routing problem.
 
-When testing, setup a slower `REFRESH_RATE` to see Karel's movements more clearly.
-
-After completing a function, you can reduce the `REFRESH_RATE` to `0.01` to speed up the execution.
-
-
-## First steps: navigate a row
-We start by implementing basic functions to handle the Karel movements. 
+## Complete Solution
 ```c
-void goUpLeft() 
-{
-    karel_turn_left();
-    karel_move();
-    karel_turn_left();
-}
-void karel_turn_right()
-{
-    karel_turn_left();
-    karel_turn_left();
-    karel_turn_left();
-}
-void goUpRight()
-{
-    karel_turn_right();
-    karel_move();
-    karel_turn_right();
-}
+#define GRID_SIZE 6
 
-``` 
+enum CellType {
+    EMPTY = 0,
+    OBSTACLE = 1,
+    BEEPER = 2,
+    VISITED = 3,
+    START = 4,
+    GOAL = 5
+};
 
-* `goUpLeft()` moves Karel up and to the left.
-* `karel_turn_right()` turns Karel right by turning left three times.
-* `goUpRight()` moves Karel up and to the right.
-
-We can also implement two functions to verify if Karel should go up and right or up and left.
-```c 
-bool shouldGoUpRight()
-{
-    return (facing_west() && !front_is_clear());
-}
-bool shouldGoUpLeft()
-{
-    return (facing_east() && !front_is_clear());
-}
-
-```
-After implementing these function, we can define a `navigateRow()` function to navigate through a row of the grid.
-```c
-void navigateRow()
-{
-    while (!shouldGoUpRight() && !shouldGoUpLeft())
-    {
-        karel_move();
-    }
-}
-```
-The function `navigateRow()` moves Karel forward until it reaches the end of the row. 
-
-Stop here and try to run the code. Karel should be able to navigate through the first row of the grid.
-
-
-### Navigate the grid
-Now we can try to implement a function to navigate through the grid. The number of columns are 8, so we can use a loop to navigate through each column.
-```c
-#define NO_COLS 8
-void navigateGrid() 
-{
-    for (int i = 0; i < NO_ROWS; i++)
-    {
-        navigateRow();
-        if (i < NO_ROWS - 1)
-            shouldGoUpRight() ? goUpRight() : goUpLeft(); 
-    }
-    
-}
-```
-
-The three-way conditional operator `?` is used to decide which function to call based on the direction Karel is facing.
-
-The navigateGrid function will move Karel through the grid, navigating each row and moving up to the next row when it reaches the end of the current row.
-
-### Counting Beepers
-Now we can implement a function to count the beepers in the grid. We will use a
-bidimensional array to store the count of beepers in each cell of the grid.
-We write a `navigateAndCollectBeepers()` function to collect beepers in a row.
-```c
-void navigateAndCollectBeepers() 
-{
-    for (int i = 0; i < NO_ROWS; i++)
-    {
-        collectBeepersInRow();
-        if (i < NO_ROWS - 1)
-            shouldGoUpRight() ? goUpRight() : goUpLeft(); 
-    }
-    
-}
-
-
-```
-NOTE THE OFFSET: The coordinates of the grid are 1-based, but the array is 0-based, so we need to subtract 1 from the coordinates when accessing the array.
-
-This is a common issue when working with arrays in C, especially when the grid or matrix is defined with 1-based indexing, as is often the case in mathematical contexts.
-
-Be careful to ensure that the array indices do not go out of bounds. In this case, we assume that Karel will not move outside the grid, so we don't need to check for that.
-
-For now we are only printing the position of the beeper, but we can later modify to update the bidimensional array with the count of beepers in each cell.
-
-
-
-
-We can also write a `printMatrix()`utility function to print the bidimensional array.
-```c
-void printMatrix()
-{
-    for (int i = 0; i < NO_ROWS; i++)
-    {
-        for (int j = 0; j < NO_COLS; j++)
-        {
-            printf(" beepers[%d][%d]=%d\n", i, j , beepers[i][j]);
+void initialize_world_map(int map[GRID_SIZE][GRID_SIZE]) {
+    // Initialize all cells to EMPTY
+    for (int i = 0; i < GRID_SIZE; i++) {
+        for (int j = 0; j < GRID_SIZE; j++) {
+            map[i][j] = EMPTY;
         }
     }
+    
+    // Set up the world layout (row = y-1, col = x-1)
+    map[0][0] = START;     // (1,1) - Start position
+    map[0][2] = OBSTACLE;  // (3,1) - Obstacle
+    map[0][4] = BEEPER;    // (5,1) - Beeper
+    
+    map[1][1] = OBSTACLE;  // (2,2) - Obstacle
+    map[1][2] = OBSTACLE;  // (3,2) - Obstacle
+    
+    map[2][3] = OBSTACLE;  // (4,3) - Obstacle
+    map[2][4] = BEEPER;    // (5,3) - Beeper
+    
+    map[3][0] = OBSTACLE;  // (1,4) - Obstacle
+    map[3][4] = OBSTACLE;  // (5,4) - Obstacle
+    
+    map[4][1] = BEEPER;    // (2,5) - Beeper
+    
+    map[5][2] = OBSTACLE;  // (3,6) - Obstacle
+    map[5][3] = OBSTACLE;  // (4,6) - Obstacle
+    map[5][5] = GOAL;      // (6,6) - Goal
 }
-```
 
-Now we can modify the `navigateGrid()` function to call `collectBeepersInRow()` and update the bidimensional array with the count of beepers in each cell.
-```c
-void navigateAndCollectBeepers() 
-{
-    for (int i = 0; i < NO_COLS; i++)
-    {
-        collectBeepersInRow();
-        if (i < NO_COLS - 1)
-            shouldGoUpRight() ? goUpRight() : goUpLeft(); 
+bool is_valid_position(int x, int y, int map[GRID_SIZE][GRID_SIZE]) {
+    // Convert Karel coordinates (1-based) to array indices (0-based)
+    int row = y - 1;
+    int col = x - 1;
+    
+    // Check bounds
+    if (row < 0 || row >= GRID_SIZE || col < 0 || col >= GRID_SIZE) {
+        return false;
     }
     
+    // Check if position is not an obstacle
+    return map[row][col] != OBSTACLE;
 }
 
-```
-
-Now we have collected all the values in the matrix and can proceed to realizing the sums.
-
-
-Let's write two functions, one for summing the first row and another for summing the first column.
-```c
-
-int sumFirstRow()
-{
-    int sum = 0;  
-    for (int i = 0; i < NO_COLS; i++)
-    {
-        sum += beepers[0][i];
-    }
-    return sum; 
-}
-
-int sumFirstCol()
-{
-    int sum = 0;  
-    for (int i = 0; i < NO_ROWS; i++)
-    {
-        sum += beepers[i][0];
-    }
-    return sum; 
-}
-
-
-void studentCode()
-{
-    navigateAndCollectBeepers();
-    int firstRowSum = sumFirstRow();
-    int firstColSum = sumFirstCol(); 
-    printf("We expect that the first row contains 2 beepers, value= %d\n", firstRowSum); 
-    printf("We expect that the first col contains 3 beepers, value= %d\n", firstColSum); 
-
-    //printMatrix();
-}
-
-```
-If everything is correct, Karel should print the sums of the first row (2) and first column (3) when it finishes navigating the grid.
-
-Now we should place a beeper at the position corresponding to the sums of the first row and column.
-After navigating the grid, Karel is at the top left corner (1, 8) and it is facing West. 
-We write a function to let Karel go down to the initial position (1, 1).
-
-```c
-void karelGoDown()
-{
-    karel_turn_left();
-    for (int i = 0; i < NO_ROWS - 1; i++)
-    {
-        karel_move();
+void turn_to_direction(int target_direction) {
+    while (karel_get_direction() != target_direction) {
+        karel_turn_left();
     }
 }
-```
 
-
-Now we need to move Karel to the position (firstColSum, firstRowSum) and place a beeper there.
-
-Write a function `moveTo(int x, int y)` to move Karel to the position (x, y) in the grid.
-```c
-void moveTo(int row, int col)
-{
-    for (int i = 0; i < col; i++)
-    {
-        karel_move();
-    }
-    karel_turn_left();
-    for (int j = 0; j < row; j++)
-    {
-        karel_move();
-    }
-}
-```
-
-```c
-void studentCode()
-{
-    navigateAndCollectBeepers();
-    int firstRowSum = sumFirstRow();
-    int firstColSum = sumFirstCol(); 
-    printf("We expect that the first row contains 2 beepers, value= %d\n", firstRowSum); 
-    printf("We expect that the first col contains 3 beepers, value= %d\n", firstColSum); 
-    karelGoDown();
-    karel_turn_left();
-
-    moveTo(2, 3);
-    karel_put_beeper();
-    karel_move();
-    //printMatrix();
-}
-```
-
-Here is the complete solution:
-```c
-#include "karel.h"
-#define REFRESH_RATE 0.01 // 1 second for smooth updates
-// Variabili globali di Karel
-const char *DIRECTION_NAMES[] = {"Est", "Nord", "Ovest", "Sud"};
-void studentCode();
-
-void setup()
-{
-    // Initialize Karel and world
-    karel_init();
-
-    // Put some beeper
-    karel_add_beeper(3, 2);
-    karel_add_beeper(5, 4);
-    karel_add_beeper(6, 3);
-    karel_add_beeper(2, 5);
-    karel_add_beeper(1, 1);
-    karel_add_beeper(4, 1);
-    karel_add_beeper(1, 5);
-    karel_add_beeper(1, 7);
-
-}
-
-static double lastMoveTime = 0;
-static int done = 0;
-void loop(double timeSec, double elapsedSec)
-{
-    if (timeSec - lastMoveTime > REFRESH_RATE)
-    { // Check frequently for smooth timing
-        bool ready = drawWorld();
-        if (ready && !done)
-            studentCode();
-        done = 1;
-        lastMoveTime = timeSec;
-    }
-}
-void goUpLeft() 
-{
-    karel_turn_left();
-    karel_move();
-    karel_turn_left();
-}
-void karel_turn_right()
-{
-    karel_turn_left();
-    karel_turn_left();
-    karel_turn_left();
-}
-void goUpRight()
-{
-    karel_turn_right();
-    karel_move();
-    karel_turn_right();
-}
-
-
-bool shouldGoUpRight()
-{
-    return (facing_west() && !front_is_clear());
-}
-bool shouldGoUpLeft()
-{
-    return (facing_east() && !front_is_clear());
-}
-
-void navigateRow()
-{
-    while (!shouldGoUpRight() && !shouldGoUpLeft())
-    {
-        karel_move();
+void move_towards_target(int target_x, int target_y, int map[GRID_SIZE][GRID_SIZE]) {
+    int current_x = karel_get_x();
+    int current_y = karel_get_y();
+    
+    // If we're already at the target, do nothing
+    if (current_x == target_x && current_y == target_y) {
+        return;
     }
     
-}
-#define NO_COLS 10
-#define NO_ROWS 8
-
-int beepers [NO_ROWS][NO_COLS] = {0};
-void printMatrix()
-{
-    for (int i = 0; i < NO_ROWS; i++)
-    {
-        for (int j = 0; j < NO_COLS; j++)
-        {
-            printf(" beepers[%d][%d]=%d\n", i, j , beepers[i][j]);
+    // Try to move horizontally first
+    if (current_x != target_x) {
+        if (current_x < target_x) {
+            // Need to move east
+            if (is_valid_position(current_x + 1, current_y, map)) {
+                turn_to_direction(0); // Face east
+                karel_move();
+                return;
+            }
+        } else {
+            // Need to move west
+            if (is_valid_position(current_x - 1, current_y, map)) {
+                turn_to_direction(2); // Face west
+                karel_move();
+                return;
+            }
         }
     }
+    
+    // Try to move vertically
+    if (current_y != target_y) {
+        if (current_y < target_y) {
+            // Need to move north
+            if (is_valid_position(current_x, current_y + 1, map)) {
+                turn_to_direction(1); // Face north
+                karel_move();
+                return;
+            }
+        } else {
+            // Need to move south
+            if (is_valid_position(current_x, current_y - 1, map)) {
+                turn_to_direction(3); // Face south
+                karel_move();
+                return;
+            }
+        }
+    }
+    
+    // If direct movement is blocked, try alternative routes
+    // This is a simple fallback - in real applications, use A* or BFS
+    printf("Direct path blocked, trying alternative route...\n");
+    
+    // Try moving in other directions to get around obstacles
+    int directions[] = {0, 1, 2, 3}; // East, North, West, South
+    for (int i = 0; i < 4; i++) {
+        int next_x = current_x;
+        int next_y = current_y;
+        
+        switch (directions[i]) {
+            case 0: next_x++; break; // East
+            case 1: next_y++; break; // North
+            case 2: next_x--; break; // West
+            case 3: next_y--; break; // South
+        }
+        
+        if (is_valid_position(next_x, next_y, map)) {
+            turn_to_direction(directions[i]);
+            karel_move();
+            return;
+        }
+    }
+    
+    printf("Warning: No valid moves available!\n");
 }
 
-void collectBeepersInRow()
-{
-        while (!shouldGoUpRight() && !shouldGoUpLeft())
-    {
-        if (beepers_present())
-        {
-            printf("beeper found at row %d, col %d\n", karel_get_y() - 1, karel_get_x() - 1);
-            beepers[karel_get_y()-1][karel_get_x() - 1] = 1;
+void navigate_to_beepers(int map[GRID_SIZE][GRID_SIZE]) {
+    // Beeper positions: (5,1), (5,3), (2,5)
+    int beeper_positions[][2] = {{5, 1}, {5, 3}, {2, 5}};
+    int num_beepers = 3;
+    
+    // Visit each beeper position
+    for (int i = 0; i < num_beepers; i++) {
+        int target_x = beeper_positions[i][0];
+        int target_y = beeper_positions[i][1];
+        
+        printf("Navigating to beeper at (%d, %d)\n", target_x, target_y);
+        
+        // Navigate to position
+        int max_steps = 50; // Prevent infinite loops
+        int steps = 0;
+        while ((karel_get_x() != target_x || karel_get_y() != target_y) && steps < max_steps) {
+            move_towards_target(target_x, target_y, map);
+            steps++;
+        }
+        
+        // Pick up beeper if present
+        if (beepers_present()) {
+            karel_pick_beeper();
+            printf("Collected beeper at (%d, %d)!\n", karel_get_x(), karel_get_y());
             
+            // Mark as visited in the map
+            map[karel_get_y() - 1][karel_get_x() - 1] = VISITED;
         }
-        karel_move();
-    }
-}
-
-void navigateGrid() 
-{
-    for (int i = 0; i < NO_ROWS; i++)
-    {
-        navigateRow();
-        if (i < NO_ROWS - 1)
-            shouldGoUpRight() ? goUpRight() : goUpLeft(); 
     }
     
-}
-void navigateAndCollectBeepers() 
-{
-    for (int i = 0; i < NO_ROWS; i++)
-    {
-        collectBeepersInRow();
-        if (i < NO_ROWS - 1)
-            shouldGoUpRight() ? goUpRight() : goUpLeft(); 
+    // Finally navigate to goal position (6, 6)
+    printf("Navigating to goal position (6, 6)\n");
+    int max_steps = 50;
+    int steps = 0;
+    while ((karel_get_x() != 6 || karel_get_y() != 6) && steps < max_steps) {
+        move_towards_target(6, 6, map);
+        steps++;
     }
     
+    printf("Mission completed! Karel reached goal at (%d, %d)\n", karel_get_x(), karel_get_y());
 }
 
-int sumFirstRow()
-{
-    int sum = 0;  
-    for (int i = 0; i < NO_COLS; i++)
-    {
-        sum += beepers[0][i];
+void studentCode() {
+    static bool missionComplete = false;
+    static int world_map[GRID_SIZE][GRID_SIZE];
+    static bool mapInitialized = false;
+    
+    if (!mapInitialized) {
+        initialize_world_map(world_map);
+        mapInitialized = true;
+        printf("World map initialized!\n");
+        print_map(world_map, karel_get_x(), karel_get_y());
     }
-    return sum; 
-}
-
-int sumFirstCol()
-{
-    int sum = 0;  
-    for (int i = 0; i < NO_ROWS; i++)
-    {
-        sum += beepers[i][0];
+    
+    if (!missionComplete) {
+        navigate_to_beepers(world_map);
+        missionComplete = true;
     }
-    return sum; 
-}
-
-void karelGoDown()
-{
-    karel_turn_left();
-    for (int i = 0; i < NO_ROWS - 1; i++)
-    {
-        karel_move();
-    }
-}
-
-void moveTo(int row, int col)
-{
-    for (int i = 0; i < col; i++)
-    {
-        karel_move();
-    }
-    karel_turn_left();
-    for (int j = 0; j < row; j++)
-    {
-        karel_move();
-    }
-}
-void studentCode()
-{
-    navigateAndCollectBeepers();
-    int firstRowSum = sumFirstRow();
-    int firstColSum = sumFirstCol(); 
-    printf("We expect that the first row contains 2 beepers, value= %d\n", firstRowSum); 
-    printf("We expect that the first col contains 3 beepers, value= %d\n", firstColSum); 
-    karelGoDown();
-    karel_turn_left();
-
-    moveTo(2, 3);
-    karel_put_beeper();
-    karel_move();
-    //printMatrix();
 }
 ```
+
+## Advanced Solution: A* Pathfinding
+For more sophisticated pathfinding:
+
+```c
+#include <stdlib.h>
+#include <math.h>
+
+typedef struct {
+    int x, y;
+    int g_cost; // Distance from start
+    int h_cost; // Heuristic distance to goal
+    int f_cost; // g_cost + h_cost
+    struct Node* parent;
+} Node;
+
+int manhattan_distance(int x1, int y1, int x2, int y2) {
+    return abs(x1 - x2) + abs(y1 - y2);
+}
+
+bool find_path_astar(int start_x, int start_y, int goal_x, int goal_y, 
+                     int map[GRID_SIZE][GRID_SIZE], int path[][2], int* path_length) {
+    // A* implementation
+    Node open_set[GRID_SIZE * GRID_SIZE];
+    Node closed_set[GRID_SIZE * GRID_SIZE];
+    int open_count = 0, closed_count = 0;
+    
+    // Initialize start node
+    Node start = {start_x, start_y, 0, 
+                  manhattan_distance(start_x, start_y, goal_x, goal_y), 0, NULL};
+    start.f_cost = start.g_cost + start.h_cost;
+    open_set[open_count++] = start;
+    
+    while (open_count > 0) {
+        // Find node with lowest f_cost
+        int current_index = 0;
+        for (int i = 1; i < open_count; i++) {
+            if (open_set[i].f_cost < open_set[current_index].f_cost) {
+                current_index = i;
+            }
+        }
+        
+        Node current = open_set[current_index];
+        
+        // Remove current from open set
+        for (int i = current_index; i < open_count - 1; i++) {
+            open_set[i] = open_set[i + 1];
+        }
+        open_count--;
+        
+        // Add to closed set
+        closed_set[closed_count++] = current;
+        
+        // Check if we reached the goal
+        if (current.x == goal_x && current.y == goal_y) {
+            // Reconstruct path
+            *path_length = 0;
+            Node* node = &current;
+            while (node != NULL) {
+                path[*path_length][0] = node->x;
+                path[*path_length][1] = node->y;
+                (*path_length)++;
+                node = node->parent;
+            }
+            
+            // Reverse path to get start-to-goal order
+            for (int i = 0; i < *path_length / 2; i++) {
+                int temp_x = path[i][0];
+                int temp_y = path[i][1];
+                path[i][0] = path[*path_length - 1 - i][0];
+                path[i][1] = path[*path_length - 1 - i][1];
+                path[*path_length - 1 - i][0] = temp_x;
+                path[*path_length - 1 - i][1] = temp_y;
+            }
+            
+            return true;
+        }
+        
+        // Check neighbors
+        int neighbors[][2] = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}};
+        for (int i = 0; i < 4; i++) {
+            int neighbor_x = current.x + neighbors[i][0];
+            int neighbor_y = current.y + neighbors[i][1];
+            
+            if (!is_valid_position(neighbor_x, neighbor_y, map)) {
+                continue;
+            }
+            
+            // Check if in closed set
+            bool in_closed = false;
+            for (int j = 0; j < closed_count; j++) {
+                if (closed_set[j].x == neighbor_x && closed_set[j].y == neighbor_y) {
+                    in_closed = true;
+                    break;
+                }
+            }
+            if (in_closed) continue;
+            
+            int tentative_g = current.g_cost + 1;
+            
+            // Check if in open set
+            int open_index = -1;
+            for (int j = 0; j < open_count; j++) {
+                if (open_set[j].x == neighbor_x && open_set[j].y == neighbor_y) {
+                    open_index = j;
+                    break;
+                }
+            }
+            
+            if (open_index == -1 || tentative_g < open_set[open_index].g_cost) {
+                Node neighbor_node = {
+                    neighbor_x, neighbor_y, tentative_g,
+                    manhattan_distance(neighbor_x, neighbor_y, goal_x, goal_y),
+                    0, &closed_set[closed_count - 1]
+                };
+                neighbor_node.f_cost = neighbor_node.g_cost + neighbor_node.h_cost;
+                
+                if (open_index == -1) {
+                    open_set[open_count++] = neighbor_node;
+                } else {
+                    open_set[open_index] = neighbor_node;
+                }
+            }
+        }
+    }
+    
+    return false; // No path found
+}
+```
+
+## Key Programming Concepts Demonstrated
+
+### 1. 2D Array Declaration and Initialization
+```c
+int map[GRID_SIZE][GRID_SIZE];                    // Declaration
+int map[3][3] = {{1,2,3}, {4,5,6}, {7,8,9}};    // Initialization
+```
+
+### 2. Row-Major Order Access
+```c
+// map[row][column] or map[y-1][x-1] for Karel coordinates
+map[2][3] = 5;  // Row 2, Column 3
+```
+
+### 3. 2D Array as Function Parameter
+```c
+void process_map(int map[GRID_SIZE][GRID_SIZE]) {
+    // Function receives a pointer to the first element
+}
+```
+
+### 4. Coordinate System Conversion
+```c
+// Karel uses 1-based coordinates, arrays use 0-based
+int array_row = karel_y - 1;
+int array_col = karel_x - 1;
+```
+
+### 5. Nested Loops for 2D Traversal
+```c
+for (int row = 0; row < GRID_SIZE; row++) {
+    for (int col = 0; col < GRID_SIZE; col++) {
+        process_cell(map[row][col]);
+    }
+}
+```
+
+## Real-World Applications
+
+### Game Development
+```c
+// Tile-based games
+int game_map[MAP_HEIGHT][MAP_WIDTH];
+// 0 = empty, 1 = wall, 2 = collectible, 3 = enemy
+```
+
+### Image Processing
+```c
+// Pixel manipulation
+unsigned char image[HEIGHT][WIDTH][3]; // RGB values
+// image[y][x][0] = red, image[y][x][1] = green, image[y][x][2] = blue
+```
+
+### Scientific Computing
+```c
+// Heat distribution simulation
+double temperature[GRID_SIZE][GRID_SIZE];
+// Calculate heat transfer between adjacent cells
+```
+
+### Geographic Information Systems
+```c
+// Elevation map
+float elevation[MAP_HEIGHT][MAP_WIDTH];
+// Calculate slope, watershed, visibility
+```
+
+This exercise provides a foundation for understanding spatial data structures and algorithms that are essential in many fields of computer science and engineering.

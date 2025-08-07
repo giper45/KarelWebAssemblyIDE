@@ -1,0 +1,8 @@
+{
+  "id": 21,
+  "name": "Karel Linked List Beepers",
+  "description": "In this exercise, Karel should track the number of beepers along a straight line and save positions in a linked list.",
+  "category": "data-structures",
+  "difficulty": "Medium",
+  "estimatedTime": "20 minutes"
+}

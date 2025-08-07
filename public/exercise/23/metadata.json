@@ -1,0 +1,8 @@
+{
+  "id": 23,
+  "name": "Karel reads beepers from a file",
+  "description": "In this exercise, Karel should read beepers in a file and put them.",
+  "category": "files",
+  "difficulty": "Hard",
+  "estimatedTime": "40 minutes"
+}

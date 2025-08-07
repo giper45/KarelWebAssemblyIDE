@@ -46,7 +46,29 @@
   "concept": "Learn how to use arrays to store and manipulate collections of data",
   "objectives": "Understand array creation, indexing, and manipulation. Learn to iterate over arrays using loops. Practice using arrays to solve problems involving collections of items.",
   "exercises": [14, 15, 16, 17, 18]
+  },
+  {
+    "id": "pointers",
+    "icon": "📍",
+    "name": "Pointers",
+    "concept": "Learn how to use pointers to reference and manipulate data in C",
+    "objectives": "Understand pointer syntax and usage. Learn how to pass pointers to functions. Practice using pointers to modify data in place.",
+    "exercises": [19]
+  },
+  {
+    "id": "data-structures",
+    "icon": "📚",
+    "name": "Data Structures",
+    "concept": "Learn how to use structs to organize and manage complex data",
+    "objectives": "Understand struct definition and usage. Learn to create and manipulate structs in C. Practice using structs to model real-world entities.",
+    "exercises": [20, 21]
+  },
+  {
+    "id": "files",
+    "icon": "📂",
+    "name": "File Operations",
+    "concept": "Learn how to read and write files in C",
+    "objectives": "Understand file I/O functions. Learn to read from and write to text files. Practice file manipulation tasks.",
+    "exercises": [22, 23]
   }
-
-
 ]

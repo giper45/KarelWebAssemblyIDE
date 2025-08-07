@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2025-08-07
+### Added 
+- Several exercises to the Karel IDE, including:
+  - File handling with beepers
+  - Navigation through a grid
+  - Beeper position management
+- New utility functions for file reading and writing
+- Enhanced Karel API with file handling capabilities
+- Improved documentation for file handling concepts
+
+
+### Changed
+- Updated `ScrollToTopButton` component to improve visibility and hover effects.
+- Enhanced `MarkdownReader` component to handle anchor clicks for smooth scrolling.
+- Improved `Toolbar` component to display version information and enhance layout.
+- Fixed minor styling issues in various components for better consistency.
+- Updated package version to 0.1.1.
+
 ## [0.1.0] - 2025-08-05
 
 ### Added

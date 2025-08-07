@@ -1,0 +1,8 @@
+{
+  "id": 19,
+  "name": "Karel Pointer Beeper",
+  "description": "In this exercise, Karel should track the number of beepers along a straight path and update a variable through an updateCounter function.",
+  "category": "pointers",
+  "difficulty": "Easy",
+  "estimatedTime": "15 minutes"
+}

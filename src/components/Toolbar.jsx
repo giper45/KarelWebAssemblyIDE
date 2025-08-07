@@ -1,11 +1,11 @@
-
-
 import React from 'react'
+import packageJson from '../../package.json'
 import SidebarOpenButton from './SidebarOpenButton'
 import { QuestionMarkCircleIcon } from '@heroicons/react/24/solid'
 import KarelIcon from './KarelIcon'
 
 const Toolbar = ({ onSidebarToggle, onHelpClick }) => {
+  const version = packageJson.version;
   return (
     <header className="w-full bg-white border-b border-gray-200 shadow-sm z-20 h-16">
       <div className="flex flex-row items-center h-full px-4 py-2 gap-2 w-full min-w-0">
@@ -20,6 +20,9 @@ const Toolbar = ({ onSidebarToggle, onHelpClick }) => {
         <div className="flex flex-col items-end min-w-0 pl-2 pr-4">
           <span className="text-base font-bold text-gray-900 leading-tight truncate">
             Karel WebAssembly IDE
+                <span className="text-xs text-gray-400 font-mono bg-gray-100 px-2 py-1 rounded ml-2">
+                v{version}
+              </span>
           </span>
           <span className="text-xs text-gray-400 font-mono tracking-wide truncate pl-2">
             Modern C Playground

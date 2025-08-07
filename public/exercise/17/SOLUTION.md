@@ -1,277 +1,298 @@
-# Solution: Bidimensional Arrays with Karel
+# Solution: Command Sequence Array
 
-This exercise demonstrates how to work with 2D arrays (matrices) in C programming, using Karel to navigate and manipulate a matrix that represents the world state.
-
-## Problem Analysis
-
-Karel needs to:
-- Create and initialize a 5x5 2D array to represent the world
-- Map beeper locations in the matrix
-- Use the matrix to guide navigation
-- Update the matrix as actions are performed
-- Understand coordinate system conversion between Karel world and array indices
-
-## Key Concept: Coordinate System Mapping
-
-The most important concept is converting between Karel coordinates and array indices:
-
-```c
-// Karel uses coordinates (1,1) to (5,5) where (1,1) is bottom-left
-// Arrays use indices [0][0] to [4][4] where [0][0] is top-left
-
-// Conversion formulas:
-array_row = MATRIX_SIZE - karel_y;    // y=1 → row=4, y=5 → row=0  
-array_col = karel_x - 1;              // x=1 → col=0, x=5 → col=4
-
-// Example mappings:
-Karel (1,1) ↔ array[4][0]  (bottom-left)
-Karel (5,5) ↔ array[0][4]  (top-right)
-Karel (3,3) ↔ array[2][2]  (center)
-```
-
-## Solution Strategy
-
-### 1. Matrix Declaration and Initialization
-```c
-#define MATRIX_SIZE 5
-static int world_matrix[MATRIX_SIZE][MATRIX_SIZE];
-
-void initialize_matrix(int matrix[MATRIX_SIZE][MATRIX_SIZE]) {
-    // Initialize all cells to 0 (empty)
-    for (int row = 0; row < MATRIX_SIZE; row++) {
-        for (int col = 0; col < MATRIX_SIZE; col++) {
-            matrix[row][col] = 0;
-        }
-    }
-    
-    // Set beeper locations to 1 using coordinate conversion
-    matrix[0][1] = 1;  // Karel (2,5) → array[0][1]
-    matrix[0][4] = 1;  // Karel (5,5) → array[0][4]
-    matrix[1][2] = 1;  // Karel (3,4) → array[1][2]
-    matrix[2][0] = 1;  // Karel (1,3) → array[2][0]
-    matrix[2][3] = 1;  // Karel (4,3) → array[2][3]
-    matrix[3][1] = 1;  // Karel (2,2) → array[3][1]
-    matrix[4][2] = 1;  // Karel (3,1) → array[4][2]
-}
-```
-
-### 2. Coordinate Conversion Functions
-```c
-void karel_to_array_coords(int karel_x, int karel_y, int* array_row, int* array_col) {
-    *array_row = MATRIX_SIZE - karel_y;  // Convert y-coordinate
-    *array_col = karel_x - 1;            // Convert x-coordinate
-}
-
-int check_matrix_at_karel_position(int matrix[MATRIX_SIZE][MATRIX_SIZE]) {
-    int karel_x = karel_get_x();
-    int karel_y = karel_get_y();
-    
-    int array_row, array_col;
-    karel_to_array_coords(karel_x, karel_y, &array_row, &array_col);
-    
-    return matrix[array_row][array_col];
-}
-```
-
-### 3. Matrix Traversal Using 2D Array
-```c
-void traverse_matrix_with_array(int matrix[MATRIX_SIZE][MATRIX_SIZE]) {
-    total_beepers = 0;
-    
-    // Nested loops to traverse 2D array systematically
-    for (int row = 0; row < MATRIX_SIZE; row++) {
-        for (int col = 0; col < MATRIX_SIZE; col++) {
-            // Convert array indices to Karel coordinates
-            int karel_x = col + 1;              // col=0 → x=1
-            int karel_y = MATRIX_SIZE - row;    // row=0 → y=5
-            
-            // Move Karel to this position
-            move_to_position(karel_x, karel_y);
-            
-            // Check matrix value at this position
-            int matrix_value = matrix[row][col];
-            
-            if (matrix_value == 1) {  // Matrix indicates beeper here
-                if (beepers_present()) {
-                    karel_pick_beeper();
-                    total_beepers++;
-                    printf("Beeper collected at (%d,%d) - Total: %d\n", 
-                           karel_x, karel_y, total_beepers);
-                    matrix[row][col] = 2; // Mark as visited
-                }
-            } else {
-                matrix[row][col] = 2; // Mark as visited (no beeper)
-            }
-        }
-    }
-}
-```
-
-### 4. Matrix Visualization
-```c
-void print_matrix(int matrix[MATRIX_SIZE][MATRIX_SIZE]) {
-    karel_setup_printf("\n=== World Matrix (2D Array) ===\n");
-    karel_setup_printf("Array indices:  ");
-    for (int col = 0; col < MATRIX_SIZE; col++) {
-        karel_setup_printf("[%d] ", col);
-    }
-    karel_setup_printf("\n");
-    
-    for (int row = 0; row < MATRIX_SIZE; row++) {
-        karel_setup_printf("Row [%d]: ", row);
-        for (int col = 0; col < MATRIX_SIZE; col++) {
-            karel_setup_printf(" %d  ", matrix[row][col]);
-        }
-        
-        int karel_y = MATRIX_SIZE - row;
-        karel_setup_printf("  ← Karel y=%d\n", karel_y);
-    }
-
-    karel_setup_printf("\nLegend: 0=Empty, 1=Beeper, 2=Visited\n\n");
-}
-```
+## Solution Explanation
+This exercise demonstrates the command pattern using enums and arrays. Commands are represented as data, making the program more flexible and easier to modify.
 
 ## Complete Solution
-
 ```c
-#include "karel.h"
-#define REFRESH_RATE 0.5
-#define MATRIX_SIZE 5
+enum Command {
+    MOVE,
+    TURN_LEFT,
+    TURN_RIGHT,
+    PICK_BEEPER,
+    PUT_BEEPER
+};
 
-const char* DIRECTION_NAMES[] = {"East", "North", "West", "South"};
-void studentCode();
-
-static int world_matrix[MATRIX_SIZE][MATRIX_SIZE];
-static int total_beepers = 0;
-
-void setup() {
-    karel_init();
-    karel_set_bag_beepers(0);
-    
-    // Place beepers at specific positions
-    karel_add_beeper(2, 5);  // Top row
-    karel_add_beeper(5, 5);
-    karel_add_beeper(3, 4);  // Second row
-    karel_add_beeper(1, 3);  // Third row
-    karel_add_beeper(4, 3);
-    karel_add_beeper(2, 2);  // Fourth row
-    karel_add_beeper(3, 1);  // Bottom row
-    
-    printf("Exercise 17: 2D Arrays (Matrices)\n");
-    printf("Karel will use a 2D array to map and navigate the world\n");
+void turn_right() {
+    karel_turn_left();
+    karel_turn_left();
+    karel_turn_left();
 }
 
-void initialize_matrix(int matrix[MATRIX_SIZE][MATRIX_SIZE]) {
-    // Initialize all cells to 0
-    for (int row = 0; row < MATRIX_SIZE; row++) {
-        for (int col = 0; col < MATRIX_SIZE; col++) {
-            matrix[row][col] = 0;
-        }
-    }
-    
-    // Set beeper locations using coordinate conversion
-    matrix[0][1] = 1;  // (2,5)
-    matrix[0][4] = 1;  // (5,5)
-    matrix[1][2] = 1;  // (3,4)
-    matrix[2][0] = 1;  // (1,3)
-    matrix[2][3] = 1;  // (4,3)
-    matrix[3][1] = 1;  // (2,2)
-    matrix[4][2] = 1;  // (3,1)
-}
-
-void move_to_position(int target_x, int target_y) {
-    // Move horizontally first
-    while (karel_get_x() != target_x) {
-        if (karel_get_x() < target_x) {
-            while (karel_get_direction() != 0) karel_turn_left(); // Face East
-            if (front_is_clear()) karel_move();
-        } else {
-            while (karel_get_direction() != 2) karel_turn_left(); // Face West
-            if (front_is_clear()) karel_move();
-        }
-    }
-    
-    // Then move vertically
-    while (karel_get_y() != target_y) {
-        if (karel_get_y() < target_y) {
-            while (karel_get_direction() != 1) karel_turn_left(); // Face North
-            if (front_is_clear()) karel_move();
-        } else {
-            while (karel_get_direction() != 3) karel_turn_left(); // Face South
-            if (front_is_clear()) karel_move();
-        }
-    }
-}
-
-void traverse_matrix_with_array(int matrix[MATRIX_SIZE][MATRIX_SIZE]) {
-    total_beepers = 0;
-    
-    for (int row = 0; row < MATRIX_SIZE; row++) {
-        for (int col = 0; col < MATRIX_SIZE; col++) {
-            int karel_x = col + 1;
-            int karel_y = MATRIX_SIZE - row;
-            
-            move_to_position(karel_x, karel_y);
-            
-            if (matrix[row][col] == 1) {
-                if (beepers_present()) {
-                    karel_pick_beeper();
-                    total_beepers++;
-                    printf("Beeper collected at (%d,%d) - Total: %d\n", 
-                           karel_x, karel_y, total_beepers);
-                }
+void execute_command(enum Command cmd) {
+    switch (cmd) {
+        case MOVE:
+            if (front_is_clear()) {
+                karel_move();
+                printf("Moved to (%d, %d)\n", karel_get_x(), karel_get_y());
+            } else {
+                printf("Cannot move - wall ahead!\n");
             }
-            matrix[row][col] = 2; // Mark as visited
-        }
+            break;
+            
+        case TURN_LEFT:
+            karel_turn_left();
+            printf("Turned left - now facing %s\n", DIRECTION_NAMES[karel_get_direction()]);
+            break;
+            
+        case TURN_RIGHT:
+            turn_right();
+            printf("Turned right - now facing %s\n", DIRECTION_NAMES[karel_get_direction()]);
+            break;
+            
+        case PICK_BEEPER:
+            if (beepers_present()) {
+                karel_pick_beeper();
+                printf("Picked up beeper at (%d, %d)\n", karel_get_x(), karel_get_y());
+            } else {
+                printf("No beeper to pick up at (%d, %d)\n", karel_get_x(), karel_get_y());
+            }
+            break;
+            
+        case PUT_BEEPER:
+            if (karel_get_bag_beepers() > 0) {
+                karel_put_beeper();
+                printf("Placed beeper at (%d, %d)\n", karel_get_x(), karel_get_y());
+            } else {
+                printf("No beepers in bag to place!\n");
+            }
+            break;
+            
+        default:
+            printf("Unknown command!\n");
+            break;
+    }
+}
+
+void execute_sequence(enum Command commands[], int length) {
+    for (int i = 0; i < length; i++) {
+        printf("Step %d: ", i + 1);
+        execute_command(commands[i]);
     }
 }
 
 void studentCode() {
-    static bool traversal_complete = false;
+    static bool sequenceComplete = false;
     
-    if (!traversal_complete) {
-        printf("Starting 2D array traversal...\n");
+    if (!sequenceComplete) {
+        enum Command sequence[] = {
+            MOVE, MOVE, TURN_RIGHT, MOVE, PICK_BEEPER,
+            TURN_LEFT, MOVE, MOVE, TURN_LEFT, MOVE,
+            PUT_BEEPER, TURN_RIGHT, MOVE
+        };
         
-        initialize_matrix(world_matrix);
-        traverse_matrix_with_array(world_matrix);
+        int length = sizeof(sequence) / sizeof(sequence[0]);
         
-        printf("Matrix traversal complete! Total beepers: %d\n", total_beepers);
-        traversal_complete = true;
-    }
-}
-
-static double lastMoveTime = 0;
-
-void loop(double timeSec, double elapsedSec) {
-    if(timeSec - lastMoveTime > REFRESH_RATE) {
-        bool ready = drawWorld();
-        if (ready)
-            studentCode();
-        lastMoveTime = timeSec;
+        printf("Starting command sequence execution...\n");
+        execute_sequence(sequence, length);
+        
+        sequenceComplete = true;
+        printf("Command sequence completed!\n");
+        printf("Final position: (%d, %d)\n", karel_get_x(), karel_get_y());
     }
 }
 ```
 
-## Key Learning Points
-
-1. **2D Array Declaration**: `int matrix[ROWS][COLS]` creates a 2D array
-2. **Coordinate Conversion**: Essential for mapping between Karel coordinates and array indices
-3. **Nested Loop Traversal**: Systematic way to visit every matrix element
-4. **Matrix Manipulation**: Reading and writing values at specific indices
-5. **State Representation**: Using matrix values to encode different world states
-
-## Expected Output
-
+## Alternative Solution (State-Based Real-Time Execution)
+```c
+void studentCode() {
+    static enum Command sequence[] = {
+        MOVE, MOVE, TURN_RIGHT, MOVE, PICK_BEEPER,
+        TURN_LEFT, MOVE, MOVE, TURN_LEFT, MOVE,
+        PUT_BEEPER, TURN_RIGHT, MOVE
+    };
+    static int current_command = 0;
+    static bool sequenceComplete = false;
+    
+    int length = sizeof(sequence) / sizeof(sequence[0]);
+    
+    while (!sequenceComplete && current_command < length) {
+        printf("Step %d: ", current_command + 1);
+        execute_command(sequence[current_command]);
+        current_command++;
+        
+        if (current_command >= length) {
+            sequenceComplete = true;
+            printf("Command sequence completed!\n");
+        }
+    }
+}
 ```
-Starting 2D array traversal...
-Beeper collected at (2,5) - Total: 1
-Beeper collected at (5,5) - Total: 2
-Beeper collected at (3,4) - Total: 3
-Beeper collected at (1,3) - Total: 4
-Beeper collected at (4,3) - Total: 5
-Beeper collected at (2,2) - Total: 6
-Beeper collected at (3,1) - Total: 7
-Matrix traversal complete! Total beepers: 7
+
+## Advanced Solutions
+Try these advanced variations to enhance your understanding:
+* 1. Command with Parameters, where commands can take parameters like distance or direction.
+* 2. Conditional Commands, where commands execute only if certain conditions are met (e.g., `PICK_IF_PRESENT`).
+* 3. Loop Commands, allowing commands to repeat a specified number of times or until a condition is met.
+
+### 1. Command with Parameters
+```c
+struct ParameterizedCommand {
+    enum Command type;
+    int parameter;
+};
+
+void execute_parameterized_command(struct ParameterizedCommand cmd) {
+    switch (cmd.type) {
+        case MOVE:
+            for (int i = 0; i < cmd.parameter && front_is_clear(); i++) {
+                karel_move();
+            }
+            break;
+        case TURN_LEFT:
+            for (int i = 0; i < cmd.parameter; i++) {
+                karel_turn_left();
+            }
+            break;
+        // ... other cases
+    }
+}
+
+// Usage:
+struct ParameterizedCommand sequence[] = {
+    {MOVE, 3},      // Move 3 steps
+    {TURN_LEFT, 2}, // Turn left twice (turn around)
+    {MOVE, 1}       // Move 1 step
+};
 ```
 
-This solution demonstrates the fundamental concepts of 2D arrays in C programming, including declaration, initialization, coordinate mapping, and systematic traversal using nested loops.
+### 2. Command Interpreter with Error Handling
+```c
+typedef enum {
+    SUCCESS,
+    WALL_BLOCKED,
+    NO_BEEPER,
+    BAG_EMPTY
+} CommandResult;
+
+CommandResult execute_command_safe(enum Command cmd) {
+    switch (cmd) {
+        case MOVE:
+            if (!front_is_clear()) return WALL_BLOCKED;
+            karel_move();
+            return SUCCESS;
+            
+        case PICK_BEEPER:
+            if (!beepers_present()) return NO_BEEPER;
+            karel_pick_beeper();
+            return SUCCESS;
+            
+        case PUT_BEEPER:
+            if (karel_get_bag_beepers() <= 0) return BAG_EMPTY;
+            karel_put_beeper();
+            return SUCCESS;
+            
+        default:
+            execute_command(cmd); // Safe commands
+            return SUCCESS;
+    }
+}
+```
+
+### 3. Loop Commands
+```c
+enum ExtendedCommand {
+    MOVE, TURN_LEFT, TURN_RIGHT, PICK_BEEPER, PUT_BEEPER,
+    LOOP_START, LOOP_END
+};
+
+void execute_with_loops(enum ExtendedCommand commands[], int length) {
+    int i = 0;
+    while (i < length) {
+        if (commands[i] == LOOP_START) {
+            int loop_start = i + 1;
+            int loop_count = commands[i + 1]; // Next command is repeat count
+            int depth = 1;
+            int loop_end = i + 2;
+            
+            // Find matching LOOP_END
+            while (depth > 0) {
+                if (commands[loop_end] == LOOP_START) depth++;
+                if (commands[loop_end] == LOOP_END) depth--;
+                loop_end++;
+            }
+            
+            // Execute loop body multiple times
+            for (int rep = 0; rep < loop_count; rep++) {
+                for (int j = loop_start + 1; j < loop_end - 1; j++) {
+                    execute_command((enum Command)commands[j]);
+                }
+            }
+            
+            i = loop_end;
+        } else {
+            execute_command((enum Command)commands[i]);
+            i++;
+        }
+    }
+}
+```
+
+## Key Programming Concepts Demonstrated
+
+### 1. Enumerated Types
+```c
+enum Command { MOVE, TURN_LEFT, TURN_RIGHT };
+// Automatically assigns: MOVE=0, TURN_LEFT=1, TURN_RIGHT=2
+```
+
+### 2. Arrays of Enums
+```c
+enum Command sequence[] = {MOVE, TURN_LEFT, MOVE};
+// Creates array of enum values
+```
+
+### 3. Switch Statements
+```c
+switch (command) {
+    case MOVE:        // Execute when command == MOVE
+        karel_move();
+        break;        // Exit switch
+    case TURN_LEFT:   // Execute when command == TURN_LEFT
+        karel_turn_left();
+        break;
+}
+```
+
+### 4. Array Size Calculation
+```c
+int length = sizeof(sequence) / sizeof(sequence[0]);
+// Works for arrays declared in same scope
+```
+
+### 5. Command Pattern
+- **Encapsulation**: Commands as data objects
+- **Flexibility**: Easy to modify behavior by changing data
+- **Reusability**: Same execution engine for different sequences
+
+## Real-World Applications
+
+### Game Development
+```c
+// NPC behavior scripting
+enum NPCAction { WALK, ATTACK, DEFEND, CAST_SPELL };
+enum NPCAction ai_sequence[] = {WALK, WALK, ATTACK, DEFEND};
+```
+
+### Robotics
+```c
+// Robot assembly line commands
+enum RobotCommand { GRAB, MOVE_TO, PLACE, ROTATE };
+enum RobotCommand assembly_sequence[] = {GRAB, MOVE_TO, ROTATE, PLACE};
+```
+
+### User Interface
+```c
+// Macro recording in editors
+enum UICommand { TYPE_TEXT, PRESS_KEY, CLICK_MOUSE };
+// Record user actions as command sequence
+```
+
+### Network Protocols
+```c
+// HTTP-like protocol commands
+enum Protocol { GET, POST, PUT, DELETE };
+enum Protocol request_sequence[] = {GET, POST, PUT};
+```
+
+This exercise teaches fundamental concepts for building flexible, data-driven systems where behavior is determined by data rather than hardcoded logic.

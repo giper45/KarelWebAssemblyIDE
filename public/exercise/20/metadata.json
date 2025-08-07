@@ -1,0 +1,8 @@
+{
+  "id": 20,
+  "name": "Karel the calculator",
+  "description": "In this exercise, Karel should implement several mathematical function on collected information about beepers",
+  "category": "data-structures",
+  "difficulty": "Medium",
+  "estimatedTime": "20 minutes"
+}

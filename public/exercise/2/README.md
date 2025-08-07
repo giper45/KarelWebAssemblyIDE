@@ -1,9 +1,5 @@
 # Navigate to Corner
-
-## Objective
 Guide Karel from the starting position to the top-right corner of the world.
-
-## Background
 In this exercise, you'll practice precise navigation. Instead of wandering around, Karel needs to reach a specific destination.
 
 ## Your Task

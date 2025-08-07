@@ -1,8 +1,8 @@
 {
   "id": 17,
-  "name": "Bidimensional Matrices with Karel",
-  "description": "Karel uses a 2D array to map and navigate the world",
-  "category": "arrays",
-  "difficulty": "Medium",
-  "estimatedTime": "25 minutes"
+  "name": "Command Sequence Array",
+  "description": "Store and execute a sequence of commands using arrays and function pointers.",
+  "category": "arrays-strings",
+  "difficulty": "Hard",
+  "estimatedTime": "30 minutes"
 }

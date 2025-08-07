@@ -25,7 +25,10 @@ const DocumentationDialog = ({ isOpen, onClose }) => {
     { name: 'facing_north()', description: 'Returns true if Karel is facing north.' },
     { name: 'facing_south()', description: 'Returns true if Karel is facing south.' },
     { name: 'facing_east()', description: 'Returns true if Karel is facing east.' },
-    { name: 'facing_west()', description: 'Returns true if Karel is facing west.' }
+    { name: 'facing_west()', description: 'Returns true if Karel is facing west.' },
+    { name: 'karel_get_x()', description: 'Returns Karel\'s current x-coordinate in the world.' },
+    { name: 'karel_get_y()', description: 'Returns Karel\'s current y-coordinate in the world.' },
+    { name: 'karel_get_orientation()', description: 'Returns Karel\'s current orientation as a string ("north", "south", "east", "west").' }
   ];
 
   const drawingFunctions = [
@@ -40,12 +43,18 @@ const DocumentationDialog = ({ isOpen, onClose }) => {
     { name: 'karel_init()', description: 'Initializes Karel and the world. Call this in your setup() function.' },
     { name: 'karel_add_beeper(x, y)', description: 'Adds a beeper at position (x, y) in the world.' },
     { name: 'karel_add_horizontal_wall(x, y, length)', description: 'Adds a horizontal wall starting at (x, y) with the specified length.' },
-    { name: 'karel_add_vertical_wall(x, y, length)', description: 'Adds a vertical wall starting at (x, y) with the specified length.' }
+    { name: 'karel_add_vertical_wall(x, y, length)', description: 'Adds a vertical wall starting at (x, y) with the specified length.' },
+    { name: 'karel_write_random_positions_to_file(filename, count)', description: 'Writes random beeper positions to a file.' },
+    { name: 'karel_put_beepers_random_positions(count)', description: 'Puts beepers at random positions in the world.' }
   ];
 
   const canvasFunctions = [
     { name: 'canvas_setFillStyleZ(color)', description: 'Sets the fill color for drawing operations. Use color names like "white", "red", etc.' },
-    { name: 'canvas_fillRect(x, y, width, height)', description: 'Draws a filled rectangle at the specified position and size.' }
+    { name: 'canvas_fillRect(x, y, width, height)', description: 'Draws a filled rectangle at the specified position and size.' },
+    { name: 'drawWalls()', description: 'Draws all walls in the Karel world.' },
+    { name: 'drawGrid()', description: 'Draws the grid lines in the Karel world.' },
+    { name: 'drawBeepers()', description: 'Draws all beepers in the Karel world.' },
+    { name: 'drawKarel()', description: 'Draws Karel at its current position and orientation.' }
   ];
 
   useEffect(() => {

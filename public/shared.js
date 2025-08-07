@@ -349,7 +349,8 @@ const API = (function () {
         'canvas_test',
         'canvas_sleep',
         'canvas_start_timer',      // Aggiungi le nuove funzioni
-        'canvas_check_timer'       // all'array degli imports
+        'canvas_check_timer',       // all'array degli imports
+        'canvas_getRandomNumber'
       ]);
 
       const wasi_unstable = getImportObject(this, [
@@ -633,7 +634,11 @@ const API = (function () {
           'top', 'hanging', 'middle', 'alphabetic', 'ideographic', 'bottom'
         ][value];
     }
+    canvas_getRandomNumber() {
+      return Math.random();
+    }
   }
+
 
   class Tar {
     constructor(buffer) {
