@@ -1,4 +1,4 @@
-# Karel the adder
+# Solution Karel the adder
 We show a "bottom-up" approach to solving the problem of counting beepers in a grid using a bidimensional array.
 
 NOTE: 
