@@ -25,6 +25,11 @@ function sleep(ms) {
   return new Promise((resolve, _) => setTimeout(resolve, ms));
 }
 
+function isWorker() {
+  return typeof window === 'undefined';
+}
+
+
 function readStr(u8, o, len = -1) {
   let str = '';
   let end = u8.length;
@@ -513,14 +518,35 @@ const API = (function () {
 
 
     // Canvas API
-    canvas_setWidth(width) { if (canvas) canvas.width = width; }
-    canvas_setHeight(height) { if (canvas) canvas.height = height; }
+    // Utility to check if running in a worker
+    isWorker() {
+      return typeof window === 'undefined';
+    }
+
+    canvas_setWidth(width) {
+      console.log(`canvas_setWidth(${width})`);
+      console.log(this.isWorker() ? 'Running in worker' : 'Running in main thread');
+      if (this.isWorker()) {
+        self.postMessage({ type: 'canvas', fn: 'setWidth', args: [width] });
+      } else if (typeof window !== 'undefined' && window.canvas) {
+        window.canvas.width = width;
+      }
+    }
+    canvas_setHeight(height) {
+      if (this.isWorker()) {
+        self.postMessage({ type: 'canvas', fn: 'setHeight', args: [height] });
+      } else if (typeof window !== 'undefined' && window.canvas) {
+        window.canvas.height = height;
+      }
+    }
     canvas_requestAnimationFrame() {
-      if (this.allowRequestAnimationFrame) {
+      if (this.isWorker()) {
+        self.postMessage({ type: 'canvas', fn: 'requestAnimationFrame', args: [] });
+      } else if 
+      (this.allowRequestAnimationFrame) {
         this.animationId = requestAnimationFrame(ms => {
           if (!this.lastLogTime || ms - this.lastLogTime >= 1000) {
             this.lastLogTime = ms;
-
           }
           if (this.allowRequestAnimationFrame) {
             this.exports.canvas_loop(ms);
@@ -531,7 +557,10 @@ const API = (function () {
 
     // ImageData stuff
     canvas_createImageData(w, h) {
-      if (ctx2d) {
+      if (this.isWorker()) {
+        self.postMessage({ type: 'canvas', fn: 'createImageData', args: [w, h] });
+        return -1; // Worker can't return handle directly
+      } else if (typeof ctx2d !== 'undefined' && ctx2d) {
         const imageData = ctx2d.createImageData(w, h);
         const handle = this.nextHandle++;
         this.handles.set(handle, imageData);
@@ -540,7 +569,9 @@ const API = (function () {
       return -1;
     }
     canvas_putImageData(handle, x, y) {
-      if (ctx2d) {
+      if (this.isWorker()) {
+        self.postMessage({ type: 'canvas', fn: 'putImageData', args: [handle, x, y] });
+      } else if (typeof ctx2d !== 'undefined' && ctx2d) {
         const imageData = this.handles.get(handle);
         if (imageData) {
           ctx2d.putImageData(imageData, x, y);
@@ -548,91 +579,180 @@ const API = (function () {
       }
     }
     canvas_imageDataSetData(handle, buffer, offset, size) {
-      const imageData = this.handles.get(handle);
-      if (imageData) {
-        this.mem.check();
-        const src = new Uint8Array(this.mem.buffer, buffer, size);
-        imageData.data.set(src, offset);
+      if (this.isWorker()) {
+        self.postMessage({ type: 'canvas', fn: 'imageDataSetData', args: [handle, buffer, offset, size] });
+      } else {
+        const imageData = this.handles.get(handle);
+        if (imageData) {
+          this.mem.check();
+          const src = new Uint8Array(this.mem.buffer, buffer, size);
+          imageData.data.set(src, offset);
+        }
       }
     }
 
     // Other Canvas methods.
-    canvas_arc(...args) { if (ctx2d) ctx2d.arc(...args); }
-    canvas_arcTo(...args) { if (ctx2d) ctx2d.arcTo(...args); }
-    canvas_beginPath(...args) { if (ctx2d) ctx2d.beginPath(...args); }
-    canvas_bezierCurveTo(...args) { if (ctx2d) ctx2d.bezierCurveTo(...args); }
-    canvas_clearRect(...args) { if (ctx2d) ctx2d.clearRect(...args); }
-    canvas_clip(value) { if (ctx2d) ctx2d.clip(['nonzero', 'evenodd'][value]); }
-    canvas_closePath(...args) { if (ctx2d) ctx2d.closePath(...args); }
-    canvas_ellipse(...args) { if (ctx2d) ctx2d.ellipse(...args); }
-    canvas_fill(value) { if (ctx2d) ctx2d.fill(['nonzero', 'evenodd'][value]); }
-    canvas_fillRect(...args) { if (ctx2d) ctx2d.fillRect(...args); }
+    canvas_arc(...args) { if (this.isWorker()) { self.postMessage({ type: 'canvas', fn: 'arc', args }); } else if (typeof ctx2d !== 'undefined' && ctx2d) { ctx2d.arc(...args); } }
+    canvas_arcTo(...args) { if (this.isWorker()) { self.postMessage({ type: 'canvas', fn: 'arcTo', args }); } else if (typeof ctx2d !== 'undefined' && ctx2d) { ctx2d.arcTo(...args); } }
+    canvas_beginPath(...args) { if (this.isWorker()) { self.postMessage({ type: 'canvas', fn: 'beginPath', args }); } else if (typeof ctx2d !== 'undefined' && ctx2d) { ctx2d.beginPath(...args); } }
+    canvas_bezierCurveTo(...args) { if (this.isWorker()) { self.postMessage({ type: 'canvas', fn: 'bezierCurveTo', args }); } else if (typeof ctx2d !== 'undefined' && ctx2d) { ctx2d.bezierCurveTo(...args); } }
+    canvas_clearRect(...args) { if (this.isWorker()) { self.postMessage({ type: 'canvas', fn: 'clearRect', args }); } else if (typeof ctx2d !== 'undefined' && ctx2d) { ctx2d.clearRect(...args); } }
+    canvas_clip(value) { if (this.isWorker()) { self.postMessage({ type: 'canvas', fn: 'clip', args: [value] }); } else if (typeof ctx2d !== 'undefined' && ctx2d) { ctx2d.clip(['nonzero', 'evenodd'][value]); } }
+    canvas_closePath(...args) { if (this.isWorker()) { self.postMessage({ type: 'canvas', fn: 'closePath', args }); } else if (typeof ctx2d !== 'undefined' && ctx2d) { ctx2d.closePath(...args); } }
+    canvas_ellipse(...args) { if (this.isWorker()) { self.postMessage({ type: 'canvas', fn: 'ellipse', args }); } else if (typeof ctx2d !== 'undefined' && ctx2d) { ctx2d.ellipse(...args); } }
+    canvas_fill(value) { if (this.isWorker()) { self.postMessage({ type: 'canvas', fn: 'fill', args: [value] }); } else if (typeof ctx2d !== 'undefined' && ctx2d) { ctx2d.fill(['nonzero', 'evenodd'][value]); } }
+    canvas_fillRect(...args) { if (this.isWorker()) { self.postMessage({ type: 'canvas', fn: 'fillRect', args }); } else if (typeof ctx2d !== 'undefined' && ctx2d) { ctx2d.fillRect(...args); } }
     canvas_fillText(text, text_len, x, y) {  // TODO: maxwidth
       this.mem.check();
-      if (ctx2d) ctx2d.fillText(this.mem.readStr(text, text_len), x, y);
+      if (this.isWorker()) {
+        self.postMessage({ type: 'canvas', fn: 'fillText', args: [this.mem.readStr(text, text_len), x, y] });
+      } else if (typeof ctx2d !== 'undefined' && ctx2d) {
+        ctx2d.fillText(this.mem.readStr(text, text_len), x, y);
+      }
     }
-    canvas_lineTo(...args) { if (ctx2d) ctx2d.lineTo(...args); }
+    canvas_lineTo(...args) { if (this.isWorker()) { self.postMessage({ type: 'canvas', fn: 'lineTo', args }); } else if (typeof ctx2d !== 'undefined' && ctx2d) { ctx2d.lineTo(...args); } }
     canvas_measureText(text, text_len) {
       this.mem.check();
-      if (ctx2d) return ctx2d.measureText(this.mem.readStr(text, text_len)).width;
+      if (this.isWorker()) {
+        self.postMessage({ type: 'canvas', fn: 'measureText', args: [this.mem.readStr(text, text_len)] });
+        return 0;
+      } else if (typeof ctx2d !== 'undefined' && ctx2d) {
+        return ctx2d.measureText(this.mem.readStr(text, text_len)).width;
+      }
       return 0;
     }
-    canvas_moveTo(...args) { if (ctx2d) ctx2d.moveTo(...args); }
-    canvas_quadraticCurveTo(...args) { if (ctx2d) ctx2d.quadraticCurveTo(...args); }
-    canvas_rect(...args) { if (ctx2d) ctx2d.rect(...args); }
-    canvas_restore(...args) { if (ctx2d) ctx2d.restore(...args); }
-    canvas_rotate(...args) { if (ctx2d) ctx2d.rotate(...args); }
-    canvas_save(...args) { if (ctx2d) ctx2d.save(...args); }
-    canvas_scale(...args) { if (ctx2d) ctx2d.scale(...args); }
-    canvas_setTransform(...args) { if (ctx2d) ctx2d.setTransform(...args); }
-    canvas_stroke(...args) { if (ctx2d) ctx2d.stroke(...args); }
-    canvas_strokeRect(...args) { if (ctx2d) ctx2d.strokeRect(...args); }
+    canvas_moveTo(...args) { if (this.isWorker()) { self.postMessage({ type: 'canvas', fn: 'moveTo', args }); } else if (typeof ctx2d !== 'undefined' && ctx2d) { ctx2d.moveTo(...args); } }
+    canvas_quadraticCurveTo(...args) { if (this.isWorker()) { self.postMessage({ type: 'canvas', fn: 'quadraticCurveTo', args }); } else if (typeof ctx2d !== 'undefined' && ctx2d) { ctx2d.quadraticCurveTo(...args); } }
+    canvas_rect(...args) { if (this.isWorker()) { self.postMessage({ type: 'canvas', fn: 'rect', args }); } else if (typeof ctx2d !== 'undefined' && ctx2d) { ctx2d.rect(...args); } }
+    canvas_restore(...args) { if (this.isWorker()) { self.postMessage({ type: 'canvas', fn: 'restore', args }); } else if (typeof ctx2d !== 'undefined' && ctx2d) { ctx2d.restore(...args); } }
+    canvas_rotate(...args) { if (this.isWorker()) { self.postMessage({ type: 'canvas', fn: 'rotate', args }); } else if (typeof ctx2d !== 'undefined' && ctx2d) { ctx2d.rotate(...args); } }
+    canvas_save(...args) { if (this.isWorker()) { self.postMessage({ type: 'canvas', fn: 'save', args }); } else if (typeof ctx2d !== 'undefined' && ctx2d) { ctx2d.save(...args); } }
+    canvas_scale(...args) { if (this.isWorker()) { self.postMessage({ type: 'canvas', fn: 'scale', args }); } else if (typeof ctx2d !== 'undefined' && ctx2d) { ctx2d.scale(...args); } }
+    canvas_setTransform(...args) { if (this.isWorker()) { self.postMessage({ type: 'canvas', fn: 'setTransform', args }); } else if (typeof ctx2d !== 'undefined' && ctx2d) { ctx2d.setTransform(...args); } }
+    canvas_stroke(...args) { if (this.isWorker()) { self.postMessage({ type: 'canvas', fn: 'stroke', args }); } else if (typeof ctx2d !== 'undefined' && ctx2d) { ctx2d.stroke(...args); } }
+    canvas_strokeRect(...args) { if (this.isWorker()) { self.postMessage({ type: 'canvas', fn: 'strokeRect', args }); } else if (typeof ctx2d !== 'undefined' && ctx2d) { ctx2d.strokeRect(...args); } }
     canvas_strokeText(text, text_len, x, y) {  // TODO: maxwidth
       this.mem.check();
-      if (ctx2d) ctx2d.strokeText(this.mem.readStr(text, text_len), x, y);
+      if (this.isWorker()) {
+        self.postMessage({ type: 'canvas', fn: 'strokeText', args: [this.mem.readStr(text, text_len), x, y] });
+      } else if (typeof ctx2d !== 'undefined' && ctx2d) {
+        ctx2d.strokeText(this.mem.readStr(text, text_len), x, y);
+      }
     }
-    canvas_transform(...args) { if (ctx2d) ctx2d.transform(...args); }
-    canvas_translate(...args) { if (ctx2d) ctx2d.translate(...args); }
+    canvas_transform(...args) { if (this.isWorker()) { self.postMessage({ type: 'canvas', fn: 'transform', args }); } else if (typeof ctx2d !== 'undefined' && ctx2d) { ctx2d.transform(...args); } }
+    canvas_translate(...args) { if (this.isWorker()) { self.postMessage({ type: 'canvas', fn: 'translate', args }); } else if (typeof ctx2d !== 'undefined' && ctx2d) { ctx2d.translate(...args); } }
 
     // Canvas properties.
     canvas_setFillStyle(buf, len) {
       this.mem.check();
-      if (ctx2d) ctx2d.fillStyle = this.mem.readStr(buf, len);
+      if (this.isWorker()) {
+        self.postMessage({ type: 'canvas', fn: 'setFillStyle', args: [this.mem.readStr(buf, len)] });
+      } else if (typeof ctx2d !== 'undefined' && ctx2d) {
+        ctx2d.fillStyle = this.mem.readStr(buf, len);
+      }
     }
     canvas_setFont(buf, len) {
       this.mem.check();
-      if (ctx2d) ctx2d.font = this.mem.readStr(buf, len);
+      if (this.isWorker()) {
+        self.postMessage({ type: 'canvas', fn: 'setFont', args: [this.mem.readStr(buf, len)] });
+      } else if (typeof ctx2d !== 'undefined' && ctx2d) {
+        ctx2d.font = this.mem.readStr(buf, len);
+      }
     }
-    canvas_setGlobalAlpha(value) { if (ctx2d) ctx2d.globalAlpha = value; }
+    canvas_setGlobalAlpha(value) {
+      if (this.isWorker()) {
+        self.postMessage({ type: 'canvas', fn: 'setGlobalAlpha', args: [value] });
+      } else if (typeof ctx2d !== 'undefined' && ctx2d) {
+        ctx2d.globalAlpha = value;
+      }
+    }
     canvas_setLineCap(value) {
-      if (ctx2d) ctx2d.lineCap = ['butt', 'round', 'square'][value];
+      if (this.isWorker()) {
+        self.postMessage({ type: 'canvas', fn: 'setLineCap', args: [value] });
+      } else if (typeof ctx2d !== 'undefined' && ctx2d) {
+        ctx2d.lineCap = ['butt', 'round', 'square'][value];
+      }
     }
-    canvas_setLineDashOffset(value) { if (ctx2d) ctx2d.lineDashOffset = value; }
+    canvas_setLineDashOffset(value) {
+      if (this.isWorker()) {
+        self.postMessage({ type: 'canvas', fn: 'setLineDashOffset', args: [value] });
+      } else if (typeof ctx2d !== 'undefined' && ctx2d) {
+        ctx2d.lineDashOffset = value;
+      }
+    }
     canvas_setLineJoin(value) {
-      if (ctx2d) ctx2d.lineJoin = ['bevel', 'round', 'miter'][value];
+      if (this.isWorker()) {
+        self.postMessage({ type: 'canvas', fn: 'setLineJoin', args: [value] });
+      } else if (typeof ctx2d !== 'undefined' && ctx2d) {
+        ctx2d.lineJoin = ['bevel', 'round', 'miter'][value];
+      }
     }
-    canvas_setLineWidth(value) { if (ctx2d) ctx2d.lineWidth = value; }
-    canvas_setMiterLimit(value) { if (ctx2d) ctx2d.miterLimit = value; }
-    canvas_setShadowBlur(value) { if (ctx2d) ctx2d.shadowBlur = value; }
+    canvas_setLineWidth(value) {
+      if (this.isWorker()) {
+        self.postMessage({ type: 'canvas', fn: 'setLineWidth', args: [value] });
+      } else if (typeof ctx2d !== 'undefined' && ctx2d) {
+        ctx2d.lineWidth = value;
+      }
+    }
+    canvas_setMiterLimit(value) {
+      if (this.isWorker()) {
+        self.postMessage({ type: 'canvas', fn: 'setMiterLimit', args: [value] });
+      } else if (typeof ctx2d !== 'undefined' && ctx2d) {
+        ctx2d.miterLimit = value;
+      }
+    }
+    canvas_setShadowBlur(value) {
+      if (this.isWorker()) {
+        self.postMessage({ type: 'canvas', fn: 'setShadowBlur', args: [value] });
+      } else if (typeof ctx2d !== 'undefined' && ctx2d) {
+        ctx2d.shadowBlur = value;
+      }
+    }
     canvas_setShadowColor(buf, len) {
       this.mem.check();
-      if (ctx2d) ctx2d.shadowColor = this.mem.readStr(buf, len);
+      if (this.isWorker()) {
+        self.postMessage({ type: 'canvas', fn: 'setShadowColor', args: [this.mem.readStr(buf, len)] });
+      } else if (typeof ctx2d !== 'undefined' && ctx2d) {
+        ctx2d.shadowColor = this.mem.readStr(buf, len);
+      }
     }
-    canvas_setShadowOffsetX(value) { if (ctx2d) ctx2d.setShadowOffsetX = value; }
-    canvas_setShadowOffsetY(value) { if (ctx2d) ctx2d.setShadowOffsetY = value; }
+    canvas_setShadowOffsetX(value) {
+      if (this.isWorker()) {
+        self.postMessage({ type: 'canvas', fn: 'setShadowOffsetX', args: [value] });
+      } else if (typeof ctx2d !== 'undefined' && ctx2d) {
+        ctx2d.setShadowOffsetX = value;
+      }
+    }
+    canvas_setShadowOffsetY(value) {
+      if (this.isWorker()) {
+        self.postMessage({ type: 'canvas', fn: 'setShadowOffsetY', args: [value] });
+      } else if (typeof ctx2d !== 'undefined' && ctx2d) {
+        ctx2d.setShadowOffsetY = value;
+      }
+    }
     canvas_setStrokeStyle(buf, len) {
       this.mem.check();
-      if (ctx2d) ctx2d.strokeStyle = this.mem.readStr(buf, len);
+      if (this.isWorker()) {
+        self.postMessage({ type: 'canvas', fn: 'setStrokeStyle', args: [this.mem.readStr(buf, len)] });
+      } else if (typeof ctx2d !== 'undefined' && ctx2d) {
+        ctx2d.strokeStyle = this.mem.readStr(buf, len);
+      }
     }
     canvas_setTextAlign(value) {
-      if (ctx2d)
+      if (this.isWorker()) {
+        self.postMessage({ type: 'canvas', fn: 'setTextAlign', args: [value] });
+      } else if (typeof ctx2d !== 'undefined' && ctx2d) {
         ctx2d.textAlign = ['left', 'right', 'center', 'start', 'end'][value];
+      }
     }
     canvas_setTextBaseline(value) {
-      if (ctx2d)
+      if (this.isWorker()) {
+        self.postMessage({ type: 'canvas', fn: 'setTextBaseline', args: [value] });
+      } else if (typeof ctx2d !== 'undefined' && ctx2d) {
         ctx2d.textBaseline = [
           'top', 'hanging', 'middle', 'alphabetic', 'ideographic', 'bottom'
         ][value];
+      }
     }
     canvas_getRandomNumber() {
       return Math.random();
@@ -962,7 +1082,9 @@ const API = (function () {
       const buffer = this.memfs.getFileContents(wasm);
       const testMod = await this.hostLogAsync(`Compiling ${wasm}`,
         WebAssembly.compile(buffer));
-      return await this.run(testMod, wasm);
+      const app = await this.run(testMod, wasm);
+      this.exports = app.exports;
+      return app;
     }
   }
 
@@ -970,4 +1092,4 @@ const API = (function () {
 
 })();
 
-window.API = API;
+self.API = API;

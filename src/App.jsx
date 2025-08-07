@@ -9,6 +9,7 @@ import IdeControls from './components/IdeControls';
 import DocumentationDialog from './components/DocumentationDialog';
 
 import { saveCodeToLocalStorage, saveCurrentExerciseToLocalStorage, getCodeFromLocalStorage, getCurrentExerciseFromLocalStorage, isCodePresentInLocalStorage, isExercisePresentInLocalStorage } from './utils/localStorageUtils';
+import { handleCanvasMessage } from './utils/handleCanvasMessage';
 
 
 // import CanvasPanel from './components/CanvasPanel';
@@ -85,6 +86,7 @@ function App() {
   // const [loadingMessage, setLoadingMessage] = useState('Initializing...')
   const [editorInitialized, setEditorInitialized] = useState(false)
   const [activeTab, setActiveTab] = useState('readme');
+  const [worker, setWorker] = useState(null);
   const editorRef = useRef(null)
   const terminalRef = useRef(null)
   const fileInputRef = useRef(null)
@@ -412,11 +414,11 @@ function App() {
             })
 
             // Comando run con Ctrl+Enter
-            editor.commands.addCommand({
-              name: 'run',
-              bindKey: { win: 'Ctrl+Enter', mac: 'Command+Enter' },
-              exec: () => run()
-            })
+            // editor.commands.addCommand({
+            //   name: 'run',
+            //   bindKey: { win: 'Ctrl+Enter', mac: 'Command+Enter' },
+            //   exec: () => run()
+            // })
 
             window.editor = editor
             setTerminalOutput(prev => prev + 'Editor initialized.\n')
@@ -465,6 +467,75 @@ function App() {
       }
     }
   }, [theme])
+
+  
+  useEffect(() => {
+  // Create and initialize worker on mount
+  const newWorker = new Worker('/wasmWorker.js');
+  setWorker(newWorker);
+
+  newWorker.postMessage({ type: 'init', showTiming });
+
+  newWorker.onmessage = (e) => {
+    const { type, output, error } = e.data;
+    if (type === 'canvas') {
+      handleCanvasMessage(e, canvasRef, newWorker);
+    }
+    if (type === 'output') {
+      setTerminalOutput(prev => prev + output);
+      setCanvasTerminalOutput(prev => prev + output);
+    }
+    if (type === 'error') {
+      setTerminalOutput(prev => prev + `Error: ${error}\n`);
+    }
+    if (type === 'done') {
+      setIsRunning(false);
+      setIsActive(true);
+      setActiveTab('world');
+      // setTerminalOutput(prev => prev + '\n--- Program finished ---\n');
+    }
+    if (type === 'error' || type === 'stopped') {
+      setIsRunning(false);
+      setIsActive(false);
+      setActiveTab('terminal');
+      setTerminalOutput(prev => prev + (type === 'error' ? `Error: ${error}\n` :'\n--- Program stopped ---\n'));
+    }
+    if (type === 'initialized') {
+      setTerminalOutput(prev => prev + 'WebAssembly Worker initialized.\n');
+    } 
+  };
+
+  // Cleanup on unmount
+  return () => newWorker.terminate();
+}, [canvasRef, showTiming]);
+
+// Run code
+const runWithWorker = (code) => {
+  if (worker) {
+    setIsRunning(true);
+    setIsActive(true);
+    setActiveTab('terminal');
+    handleClearTerminal();
+    uploadCodeFromEditor();
+    worker.postMessage({ type: 'run', code });
+    setTerminalOutput(prev => prev + '\n--- Running program ---\n');
+    // Optional: timeout for infinite loop protection
+    setTimeout(() => {
+      if (isRunning) {
+        worker.postMessage({ type: 'stop' });
+        setTerminalOutput(prev => prev + '\n[KAREL_ERROR] Execution stopped: possible infinite loop.\n');
+      }
+    }, 5000);
+  }
+};
+
+// Stop code
+const stopWorker = () => {
+  if (worker) {
+    worker.postMessage({ type: 'stop' });
+  }
+};
+
 
   // Inizializza WebAssembly API
   useEffect(() => {
@@ -768,13 +839,14 @@ const showApp = firstExerciseReady && currentExercise;
           <IdeControls
             isRunning={isRunning}
             isActive={isActive}
-            onRun={run}
+            // onRun={run}
+            onRun={() => runWithWorker(window.editor.getValue())}
             onDownloadFile={handleDownloadFileClick}
             keyboard={keyboard}
             onKeyboardChange={setKeyboard}
             showTiming={showTiming}
             onShowTimingChange={setShowTiming}
-            onReset={resetLayout}
+            onReset={stopWorker}
             theme={theme}
             onThemeChange={setTheme}
             onPrevious={handlePreviousExercise}

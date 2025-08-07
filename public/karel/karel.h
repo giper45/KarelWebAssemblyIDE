@@ -424,7 +424,6 @@ static inline void karel_buffer_enqueue_action(KarelActionType action_type) {
 }
 
 static inline void karel_buffer_enqueue_log(const char* format, ...) {
-            karel_setup_printf(KAREL_ERROR_START " Karel log buffer is full!!! Are you doing an infinite loop?" KAREL_ERROR_END);
     if (karel_unified_buffer.count >= KAREL_UNIFIED_BUFFER_SIZE) {
         karel_setup_printf(KAREL_ERROR_START " Karel log buffer is full!!! Are you doing an infinite loop?" KAREL_ERROR_END);
         return;
