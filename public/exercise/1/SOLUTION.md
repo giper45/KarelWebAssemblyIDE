@@ -1,4 +1,4 @@
-Karel First Steps: Learning C and Karel's World
+# Karel First Steps: Learning C and Karel's World
 
 In this first exercise, let's discover how to control Karel using basic C programming concepts. We'll see how to move Karel, use variables, print information, and interact with the world.
 
