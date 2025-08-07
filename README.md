@@ -6,6 +6,9 @@
 
 A modern, web-based integrated development environment for learning programming with Karel the Robot using C and WebAssembly.
 
+Demo here:
+https://karel-webassembly.netlify.app/
+
 ## 🤖 About Karel
 
 Karel is a programming environment designed to teach fundamental programming concepts in a simple, visual way. Students write C code to control a robot (Karel) that moves around a grid world, picks up and puts down "beepers," and navigates around walls.
