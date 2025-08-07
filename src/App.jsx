@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import './App.css'
-import { Toolbar, Terminal, Sidebar, Title, Footer } from './components'
+import { Toolbar, Terminal, Sidebar, Title, Footer, ScrollToTopButton} from './components'
 import { useExerciseData } from './hooks/useExerciseData';
 import LoadingSpinner from './components/LoadingSpinner'
 import TabComponent from './components/TabComponent';
@@ -819,6 +819,7 @@ const showApp = firstExerciseReady && currentExercise;
         </div>
       )}
       <Footer />
+      <ScrollToTopButton />
 
       {/* Documentation Dialog */}
       <DocumentationDialog 

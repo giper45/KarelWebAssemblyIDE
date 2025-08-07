@@ -49,9 +49,9 @@ const Title = ({
           </span>
           
           {/* Badge Status */}
-          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(status)}`}>
+          {/* <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(status)}`}>
             {status.replace('-', ' ').toUpperCase()}
-          </span>
+          </span> */}
         </div>
       </div>
     </div>
