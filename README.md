@@ -1,4 +1,8 @@
 # Karel WebAssembly IDE
+<p align="center">
+  <img src="public/img/karel.png" alt="Karel Icon" width="120"/>
+</p>
+
 
 A modern, web-based integrated development environment for learning programming with Karel the Robot using C and WebAssembly.
 
