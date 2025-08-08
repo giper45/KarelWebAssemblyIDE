@@ -84,7 +84,7 @@ The Karel library provides these core functions:
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/giper45/KarelWebAssemblyIDE
    cd wasm-karen-clang
    ```
 
