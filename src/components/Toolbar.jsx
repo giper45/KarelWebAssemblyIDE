@@ -8,6 +8,7 @@ import KarelIcon from './KarelIcon'
 
 const Toolbar = ({ 
   isRunning,
+  isRunEnabled,
   onRun,
   onOpenFile,
   keyboard,

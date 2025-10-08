@@ -775,7 +775,7 @@ const API = (function () {
       if (this.preloadingStarted) return;
       this.preloadingStarted = true;
 
-      console.log('🚀 Starting background preloading of compiler modules...');
+      console.log('Starting background preloading of compiler modules...');
       
       // Start preloading clang and lld modules in background
       this.preloadPromises.clang = this.preloadModule(this.clangFilename, 'CLANG compiler');
@@ -784,10 +784,10 @@ const API = (function () {
       // Log when preloading completes
       Promise.all([this.preloadPromises.clang, this.preloadPromises.lld])
         .then(() => {
-          console.log('✅ Background preloading completed! First compilation will be faster.');
+          console.log('Background preloading completed! First compilation will be faster.');
         })
         .catch((error) => {
-          console.warn('⚠️ Background preloading failed:', error.message);
+          console.warn('Background preloading failed:', error.message);
         });
     }
 
@@ -816,14 +816,26 @@ const API = (function () {
       };
     }
 
+    // Check if API is fully ready for compilation
+    isReadyForCompilation() {
+      // Check if basic API initialization is complete
+      if (!this.ready) return false;
+      
+      // Check if required modules are loaded
+      const clangLoaded = !!this.moduleCache[this.clangFilename];
+      const lldLoaded = !!this.moduleCache[this.lldFilename];
+      
+      return clangLoaded && lldLoaded;
+    }
+
     async preloadModule(filename, displayName) {
       try {
         console.log(`� Starting preload: ${displayName}`);
         const module = await this.loadModuleWithFallback(filename);
-        console.log(`✅ Preloaded: ${displayName}`);
+        console.log(`Preloaded: ${displayName}`);
         return module;
       } catch (error) {
-        console.warn(`❌ Preload failed: ${displayName}`, error.message);
+        console.warn(`Preload failed: ${displayName}`, error.message);
         // Don't throw error for preloading failures, just log them
         return null;
       }
@@ -885,15 +897,15 @@ const API = (function () {
             mode: 'cors' // Explicitly use CORS mode
           });
           
-          console.log(`✅ ${file}: CORS OK (${response.status})`);
+          console.log(`${file}: CORS OK (${response.status})`);
           console.log(`   Access-Control-Allow-Origin: ${response.headers.get('access-control-allow-origin')}`);
           
         } catch (error) {
-          console.log(`❌ ${file}: CORS Error - ${error.message}`);
+          console.log(`${file}: CORS Error - ${error.message}`);
           
           // Provide helpful suggestions
           if (error.message.includes('CORS') || error.name === 'TypeError') {
-            console.log(`💡 Suggestion: Configure CORS on S3 bucket to allow origin: ${window.location.origin}`);
+            console.log(`Suggestion: Configure CORS on S3 bucket to allow origin: ${window.location.origin}`);
           }
         }
       }
@@ -930,7 +942,7 @@ const API = (function () {
     async getModule(name) {
       // If already cached, return immediately
       if (this.moduleCache[name]) {
-        console.log(`✅ Using cached module: ${name}`);
+        console.log(`Using cached module: ${name}`);
         return this.moduleCache[name];
       }
       
@@ -965,7 +977,7 @@ const API = (function () {
       for (const { url, source } of urls) {
         try {
           const start = performance.now();
-          console.log(`🌐 Attempting to load ${name} from ${source}: ${url}`);
+          console.log(`Attempting to load ${name} from ${source}: ${url}`);
           this.hostLog(`Loading ${name} from ${source}...`);
           
           const response = await fetch(url);
@@ -979,26 +991,24 @@ const API = (function () {
           const loadTime = ((performance.now() - start) / 1000).toFixed(2);
           const sizeMB = (buffer.byteLength / 1024 / 1024).toFixed(1);
           this.hostWrite(` done. (${sizeMB}MB in ${loadTime}s from ${source})\n`);
-          console.log(`✅ Loaded ${name} from ${source} in ${loadTime}s (${sizeMB}MB)`);
+          console.log(`Loaded ${name} from ${source} in ${loadTime}s (${sizeMB}MB)`);
           
           // Cache the result
           this.moduleCache[name] = module;
           return module;
           
         } catch (error) {
-          console.log("SONO QI")
-          console.log(error.message)
-          // const isCorsError = error.message.includes('CORS') || 
-          //                    error.message.includes('cross-origin') ||
-          //                    error.name === 'TypeError';
+          const isCorsError = error.message.includes('CORS') || 
+                             error.message.includes('cross-origin') ||
+                             error.name === 'TypeError';
           
-          // if (isCorsError && source === 'CDN') {
-          //   this.hostWrite(` CORS error from ${source}.\n`);
-          //   console.warn(`🚫 CORS error loading ${name} from CDN. Check S3/CloudFront CORS settings.`);
-          // } else {
-          //   this.hostWrite(` failed from ${source}.\n`);
-          //   console.warn(`❌ Failed to load ${name} from ${source}:`, error.message);
-          // }
+          if (isCorsError && source === 'CDN') {
+            this.hostWrite(` CORS error from ${source}.\n`);
+            console.warn(`CORS error loading ${name} from CDN. Check S3/CloudFront CORS settings.`);
+          } else {
+            this.hostWrite(` failed from ${source}.\n`);
+            console.warn(`Failed to load ${name} from ${source}:`, error.message);
+          }
           continue;
         }
       }

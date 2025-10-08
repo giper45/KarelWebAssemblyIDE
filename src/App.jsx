@@ -85,7 +85,8 @@ function App() {
   // const [loadingMessage, setLoadingMessage] = useState('Initializing...')
   const [editorInitialized, setEditorInitialized] = useState(false)
   const [activeTab, setActiveTab] = useState('readme')
-  const [preloadingStatus, setPreloadingStatus] = useState({ enabled: false, status: 'not-started' });
+  const [preloadingStatus, setPreloadingStatus] = useState({ enabled: false, status: 'not-started' })
+  const [apiReady, setApiReady] = useState(false);
   const editorRef = useRef(null)
   const terminalRef = useRef(null)
   const fileInputRef = useRef(null)
@@ -511,25 +512,29 @@ function App() {
 
           apiRef.current = api
           setTerminalOutput(prev => prev + 'WebAssembly API initialized.\n')
-          setTerminalOutput(prev => prev + '🌐 Using AWS S3 CDN for faster module loading...\n')
-          setTerminalOutput(prev => prev + '📦 Background preloading compiler modules for faster first run...\n')
+          setTerminalOutput(prev => prev + 'Using CDN for faster module loading...\n')
+          setTerminalOutput(prev => prev + 'Background preloading compiler modules for faster first run...\n')
           
-          // Monitor preloading status
+          // Monitor preloading and API readiness status
           let preloadingMessageShown = false
-          const monitorPreloading = () => {
+          const monitorStatus = () => {
             const status = api.getPreloadingStatus()
             setPreloadingStatus(status)
             
+            // Check API readiness (combination of API initialization and module loading)
+            const isReady = api.isReadyForCompilation()
+            setApiReady(isReady)
+            
             if (status.enabled && status.status === 'in-progress') {
-              setTimeout(monitorPreloading, 1000) // Check every second
+              setTimeout(monitorStatus, 1000) // Check every second
             } else if (status.enabled && status.status === 'completed' && !preloadingMessageShown) {
               preloadingMessageShown = true
-              setTerminalOutput(prev => prev + '✅ Compiler modules preloaded - ready for fast compilation!\n')
+              setTerminalOutput(prev => prev + 'Compiler modules preloaded - ready for compilation!\n')
             }
           }
           
           // Start monitoring after a short delay
-          setTimeout(monitorPreloading, 500)
+          setTimeout(monitorStatus, 500)
         }
       } catch (error) {
         console.error('Failed to initialize API:', error)
@@ -730,6 +735,9 @@ const handleNextExercise = async () => {
 const showMainLoading = !firstExerciseReady && !editorInitialized;
 const showApp = firstExerciseReady && currentExercise;
 
+// Run button should be enabled only when API is ready and editor is initialized
+const isRunEnabled = apiReady && editorInitialized && !isRunning;
+
   return (
     <div id="all" className="min-h-screen bg-gray-50 flex flex-col">
       {/* Input file nascosto */}
@@ -757,6 +765,7 @@ const showApp = firstExerciseReady && currentExercise;
 
       <Toolbar
         isRunning={isRunning}
+        isRunEnabled={isRunEnabled}
         onRun={run}
         onOpenFile={handleDownloadFileClick}
         keyboard={keyboard}
@@ -792,6 +801,7 @@ const showApp = firstExerciseReady && currentExercise;
           {/* IDE Controls Row */}
           <IdeControls
             isRunning={isRunning}
+            isRunEnabled={isRunEnabled}
             isActive={isActive}
             onRun={run}
             onDownloadFile={handleDownloadFileClick}

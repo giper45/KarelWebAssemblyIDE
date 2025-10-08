@@ -85,6 +85,7 @@ const EditorControls = ({
 const CodeControls = ({
   onRun,
   isRunning,
+  isRunEnabled,
   isActive,
   onDownloadFile,
   onReset
@@ -93,8 +94,13 @@ const CodeControls = ({
     {!isActive ? (
       <button
         onClick={onRun}
-        disabled={isRunning}
-        className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+        disabled={isRunning || !isRunEnabled}
+        className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg transition-colors font-medium ${
+          isRunEnabled && !isRunning 
+            ? 'bg-blue-500 text-white hover:bg-blue-600' 
+            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+        } disabled:opacity-50 disabled:cursor-not-allowed`}
+        title={!isRunEnabled ? 'Waiting for compiler modules to load...' : ''}
       >
         {isRunning ? (
           <>
@@ -151,6 +157,7 @@ const CodeControls = ({
 
 const IdeControls = ({
   isRunning,
+  isRunEnabled,
   isActive,
   onRun,
   onDownloadFile,
@@ -181,6 +188,7 @@ const IdeControls = ({
       <CodeControls
         onRun={onRun}
         isRunning={isRunning}
+        isRunEnabled={isRunEnabled}
         isActive={isActive}
         onDownloadFile={onDownloadFile}
         onReset={onReset}
