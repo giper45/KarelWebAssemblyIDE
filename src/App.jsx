@@ -84,7 +84,8 @@ function App() {
   const [isHelpDialogOpen, setIsHelpDialogOpen] = useState(false)
   // const [loadingMessage, setLoadingMessage] = useState('Initializing...')
   const [editorInitialized, setEditorInitialized] = useState(false)
-  const [activeTab, setActiveTab] = useState('readme');
+  const [activeTab, setActiveTab] = useState('readme')
+  const [preloadingStatus, setPreloadingStatus] = useState({ enabled: false, status: 'not-started' });
   const editorRef = useRef(null)
   const terminalRef = useRef(null)
   const fileInputRef = useRef(null)
@@ -501,11 +502,30 @@ function App() {
             clang: 'clang',
             lld: 'lld',
             memfs: 'memfs',
-            sysroot: 'sysroot.tar'
+            sysroot: 'sysroot.tar',
+            enablePreloading: true // Enable background preloading
           })
 
           apiRef.current = api
           setTerminalOutput(prev => prev + 'WebAssembly API initialized.\n')
+          setTerminalOutput(prev => prev + '📦 Background preloading compiler modules for faster first run...\n')
+          
+          // Monitor preloading status
+          let preloadingMessageShown = false
+          const monitorPreloading = () => {
+            const status = api.getPreloadingStatus()
+            setPreloadingStatus(status)
+            
+            if (status.enabled && status.status === 'in-progress') {
+              setTimeout(monitorPreloading, 1000) // Check every second
+            } else if (status.enabled && status.status === 'completed' && !preloadingMessageShown) {
+              preloadingMessageShown = true
+              setTerminalOutput(prev => prev + '✅ Compiler modules preloaded - ready for fast compilation!\n')
+            }
+          }
+          
+          // Start monitoring after a short delay
+          setTimeout(monitorPreloading, 500)
         }
       } catch (error) {
         console.error('Failed to initialize API:', error)
@@ -588,7 +608,7 @@ function App() {
     setTerminalOutput(prev => prev + '\n--- Running program ---\n')
 
     try {
-      await apiRef.current.compileLinkRun(editor.getValue())
+      await apiRef.current.compileLinkRun(window.editor.getValue())
     } 
     catch (error) {
         console.error('Error running program:', error)
@@ -744,6 +764,7 @@ const showApp = firstExerciseReady && currentExercise;
         onThemeChange={setTheme}
         onSidebarToggle={toggleSidebar}
         onHelpClick={handleHelpClick}
+        preloadingStatus={preloadingStatus}
       />
 
 

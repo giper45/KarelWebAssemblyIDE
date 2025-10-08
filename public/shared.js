@@ -726,9 +726,6 @@ const API = (function () {
 
       // this.hostWrite = options.hostWrite;
 
-
-
-
       this.clangFilename = options.clang || 'clang';
       this.lldFilename = options.lld || 'lld';
       this.sysrootFilename = options.sysroot || 'sysroot.tar';
@@ -746,6 +743,12 @@ const API = (function () {
       ];
 
       this.currentApp = null; // Track the currently running app
+      
+      // Background preloading flags and promises
+      this.preloadingEnabled = options.enablePreloading !== false; // Default to true
+      this.preloadPromises = {};
+      this.preloadingStarted = false;
+
       this.memfs = new MemFS({
         compileStreaming: this.compileStreaming,
         hostWrite: this.hostWrite,
@@ -753,6 +756,99 @@ const API = (function () {
       });
       this.ready = this.memfs.ready.then(
         () => { return this.untar(this.memfs, this.sysrootFilename); });
+
+      // Start background preloading if enabled
+      if (this.preloadingEnabled) {
+        this.startBackgroundPreloading();
+      }
+    }
+
+    // Background preloading methods
+    startBackgroundPreloading() {
+      if (this.preloadingStarted) return;
+      this.preloadingStarted = true;
+
+      console.log('🚀 Starting background preloading of compiler modules...');
+      
+      // Start preloading clang and lld modules in background
+      this.preloadPromises.clang = this.preloadModule(this.clangFilename, 'CLANG compiler');
+      this.preloadPromises.lld = this.preloadModule(this.lldFilename, 'LLD linker');
+      
+      // Log when preloading completes
+      Promise.all([this.preloadPromises.clang, this.preloadPromises.lld])
+        .then(() => {
+          console.log('✅ Background preloading completed! First compilation will be faster.');
+        })
+        .catch((error) => {
+          console.warn('⚠️ Background preloading failed:', error.message);
+        });
+    }
+
+    // Get preloading status for UI feedback
+    getPreloadingStatus() {
+      if (!this.preloadingEnabled) {
+        return { enabled: false, status: 'disabled' };
+      }
+
+      const promises = Object.keys(this.preloadPromises);
+      if (promises.length === 0) {
+        return { enabled: true, status: 'not-started' };
+      }
+
+      const clangLoaded = !!this.moduleCache[this.clangFilename];
+      const lldLoaded = !!this.moduleCache[this.lldFilename];
+      const allCompleted = clangLoaded && lldLoaded;
+
+      return {
+        enabled: true,
+        status: allCompleted ? 'completed' : 'in-progress',
+        modules: {
+          clang: clangLoaded ? 'loaded' : 'loading',
+          lld: lldLoaded ? 'loaded' : 'loading'
+        }
+      };
+    }
+
+    async preloadModule(filename, displayName) {
+      try {
+        console.log(`📦 Preloading ${displayName} (${filename})...`);
+        const startTime = performance.now();
+        
+        // Silently fetch and compile the module
+        const module = await this.compileStreaming(filename);
+        this.moduleCache[filename] = module;
+        
+        const endTime = performance.now();
+        const duration = ((endTime - startTime) / 1000).toFixed(2);
+        console.log(`✅ ${displayName} preloaded successfully (${duration}s)`);
+        
+        return module;
+      } catch (error) {
+        console.warn(`❌ Failed to preload ${displayName}:`, error.message);
+        // Don't throw error for preloading failures, just log them
+        return null;
+      }
+    }
+
+    // Debug method for testing preloading from browser console
+    debug() {
+      console.log('=== Preloading Debug Info ===');
+      console.log('Enabled:', this.preloadingEnabled);
+      console.log('Started:', this.preloadingStarted);
+      console.log('Module cache keys:', Object.keys(this.moduleCache));
+      console.log('Preload promises:', Object.keys(this.preloadPromises));
+      console.log('Status:', this.getPreloadingStatus());
+      
+      // Test file sizes
+      fetch('/clang', {method: 'HEAD'}).then(r => 
+        console.log('CLANG size:', r.headers.get('content-length'), 'bytes')
+      );
+      fetch('/lld', {method: 'HEAD'}).then(r => 
+        console.log('LLD size:', r.headers.get('content-length'), 'bytes')
+      );
+      fetch('/sysroot.tar', {method: 'HEAD'}).then(r => 
+        console.log('SYSROOT size:', r.headers.get('content-length'), 'bytes')
+      );
     }
 
     // Nuovo metodo per catturare l'output durante la compilazione
@@ -784,7 +880,30 @@ const API = (function () {
     }
 
     async getModule(name) {
+      // If already cached, return immediately
       if (this.moduleCache[name]) return this.moduleCache[name];
+      
+      // Check if we have a preload promise for this module
+      if (this.preloadPromises[name]) {
+        try {
+          // Wait for preloading to complete, but show user-friendly message
+          this.hostLog(`Using preloaded ${name}...`);
+          const module = await this.preloadPromises[name];
+          if (module) {
+            this.hostWrite(' ready.\n');
+            return module;
+          } else {
+            // Preloading failed, fall back to normal loading
+            this.hostWrite(' preloading failed, fetching now...\n');
+          }
+        } catch (error) {
+          // If preloading failed, fall back to normal loading
+          console.warn(`Preloading of ${name} failed, falling back to normal loading:`, error.message);
+          this.hostWrite(' preloading failed, fetching now...\n');
+        }
+      }
+      
+      // Fall back to normal loading with user feedback
       const module = await this.hostLogAsync(`Fetching and compiling ${name}`,
         this.compileStreaming(name));
       this.moduleCache[name] = module;

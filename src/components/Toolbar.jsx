@@ -6,8 +6,46 @@ import { FaGithub } from 'react-icons/fa';
 
 import KarelIcon from './KarelIcon'
 
-const Toolbar = ({ onSidebarToggle, onHelpClick }) => {
+const Toolbar = ({ 
+  isRunning,
+  onRun,
+  onOpenFile,
+  keyboard,
+  onKeyboardChange,
+  showTiming,
+  onShowTimingChange,
+  onReset,
+  theme,
+  onThemeChange,
+  onSidebarToggle,
+  onHelpClick,
+  preloadingStatus
+}) => {
   const version = packageJson.version;
+
+  // Preloading status indicator
+  const getPreloadingIndicator = () => {
+    if (!preloadingStatus?.enabled) return null;
+    
+    switch (preloadingStatus.status) {
+      case 'in-progress':
+        return (
+          <div className="flex items-center gap-1 px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-medium">
+            <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
+            Preloading...
+          </div>
+        );
+      case 'completed':
+        return (
+          <div className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            Ready
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
   return (
     <header className="w-full bg-white border-b border-gray-200 shadow-sm z-20 h-16">
       <div className="flex flex-row items-center h-full px-4 py-2 gap-2 w-full min-w-0">
@@ -31,7 +69,10 @@ const Toolbar = ({ onSidebarToggle, onHelpClick }) => {
             </span>
           </div>
         </div>
-           {/* GitHub Link Button */}
+        {/* Preloading Status */}
+        {getPreloadingIndicator()}
+        
+        {/* GitHub Link Button */}
         <a
           href="https://github.com/giper45/KarelWebAssemblyKaren"
           target="_blank"
