@@ -6,9 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-## [1.1.0] - 2025-10-09
+## [1.1.1] - 2025-10-09
 ### Added
 - Compiler is downloaded when the user starts the web app
+- CDN with AWS for large files
+
 ## [1.0.1] - 2025-08-07
 ### Added
 - GitHub link button to the toolbar
