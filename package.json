@@ -1,7 +1,7 @@
 {
   "name": "wasm-karen-clang",
   "private": true,
-  "version": "1.1.1",
+  "version": "1.1.2",
   "type": "module",
   "scripts": {
     "dev": "vite",

@@ -896,7 +896,7 @@ static inline void drawInfo()
     snprintf(info, sizeof(info), "Direction: %s", DIRECTION_NAMES[karel.direction]);
     canvas_fillText(info, strlen(info), 50, 30);
 
-    snprintf(info, sizeof(info), "Beeper in the bag: %d", karel.bag_beepers);
+    snprintf(info, sizeof(info), "Beepers in the bag: %d", karel.bag_beepers);
     canvas_fillText(info, strlen(info), 300, 10);
 }
 
