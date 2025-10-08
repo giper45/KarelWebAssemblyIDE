@@ -744,6 +744,13 @@ const API = (function () {
 
       this.currentApp = null; // Track the currently running app
       
+      // CDN Configuration
+      this.cdnConfig = {
+        enabled: options.useCDN !== false, // Default to true
+        baseUrl: options.cdnBaseUrl || 'https://d2o62kqzkq27yu.cloudfront.net/',
+        fallbackToLocal: options.fallbackToLocal !== false
+      };
+      
       // Background preloading flags and promises
       this.preloadingEnabled = options.enablePreloading !== false; // Default to true
       this.preloadPromises = {};
@@ -811,20 +818,12 @@ const API = (function () {
 
     async preloadModule(filename, displayName) {
       try {
-        console.log(`📦 Preloading ${displayName} (${filename})...`);
-        const startTime = performance.now();
-        
-        // Silently fetch and compile the module
-        const module = await this.compileStreaming(filename);
-        this.moduleCache[filename] = module;
-        
-        const endTime = performance.now();
-        const duration = ((endTime - startTime) / 1000).toFixed(2);
-        console.log(`✅ ${displayName} preloaded successfully (${duration}s)`);
-        
+        console.log(`� Starting preload: ${displayName}`);
+        const module = await this.loadModuleWithFallback(filename);
+        console.log(`✅ Preloaded: ${displayName}`);
         return module;
       } catch (error) {
-        console.warn(`❌ Failed to preload ${displayName}:`, error.message);
+        console.warn(`❌ Preload failed: ${displayName}`, error.message);
         // Don't throw error for preloading failures, just log them
         return null;
       }
@@ -832,23 +831,72 @@ const API = (function () {
 
     // Debug method for testing preloading from browser console
     debug() {
-      console.log('=== Preloading Debug Info ===');
-      console.log('Enabled:', this.preloadingEnabled);
-      console.log('Started:', this.preloadingStarted);
+      console.log('=== WebAssembly API Debug Info ===');
+      console.log('CDN Config:', this.cdnConfig);
+      console.log('Preloading enabled:', this.preloadingEnabled);
+      console.log('Preloading started:', this.preloadingStarted);
       console.log('Module cache keys:', Object.keys(this.moduleCache));
       console.log('Preload promises:', Object.keys(this.preloadPromises));
       console.log('Status:', this.getPreloadingStatus());
       
-      // Test file sizes
+      console.log('=== Testing CDN URLs ===');
+      // Test CDN file sizes
+      if (this.cdnConfig.enabled) {
+        fetch(`${this.cdnConfig.baseUrl}/clang`, {method: 'HEAD'}).then(r => 
+          console.log('CDN CLANG size:', r.headers.get('content-length'), 'bytes')
+        ).catch(e => console.log('CDN CLANG error:', e.message));
+        
+        fetch(`${this.cdnConfig.baseUrl}/lld`, {method: 'HEAD'}).then(r => 
+          console.log('CDN LLD size:', r.headers.get('content-length'), 'bytes')
+        ).catch(e => console.log('CDN LLD error:', e.message));
+        
+        fetch(`${this.cdnConfig.baseUrl}/sysroot.tar`, {method: 'HEAD'}).then(r => 
+          console.log('CDN SYSROOT size:', r.headers.get('content-length'), 'bytes')
+        ).catch(e => console.log('CDN SYSROOT error:', e.message));
+      }
+      
+      // Test local fallback file sizes
       fetch('/clang', {method: 'HEAD'}).then(r => 
-        console.log('CLANG size:', r.headers.get('content-length'), 'bytes')
-      );
-      fetch('/lld', {method: 'HEAD'}).then(r => 
-        console.log('LLD size:', r.headers.get('content-length'), 'bytes')
-      );
-      fetch('/sysroot.tar', {method: 'HEAD'}).then(r => 
-        console.log('SYSROOT size:', r.headers.get('content-length'), 'bytes')
-      );
+        console.log('Local CLANG size:', r.headers.get('content-length'), 'bytes')
+      ).catch(e => console.log('Local CLANG error:', e.message));
+    }
+
+    // Test CORS configuration
+    async testCORS() {
+      console.log('=== Testing CORS Configuration ===');
+      
+      if (!this.cdnConfig.enabled) {
+        console.log('CDN disabled, CORS test skipped');
+        return;
+      }
+
+      const testFiles = ['clang', 'lld', 'sysroot.tar'];
+      
+      for (const file of testFiles) {
+        // Use the same URL construction logic as getModuleUrls
+        const baseUrl = this.cdnConfig.baseUrl.replace(/\/$/, '');
+        const fileName = file.replace(/^\//, '');
+        const url = `${baseUrl}/${fileName}`;
+        console.log(`Testing CORS for: ${url}`);
+        
+        try {
+          const response = await fetch(url, { 
+            method: 'HEAD',
+            mode: 'cors' // Explicitly use CORS mode
+          });
+          
+          console.log(`✅ ${file}: CORS OK (${response.status})`);
+          console.log(`   Access-Control-Allow-Origin: ${response.headers.get('access-control-allow-origin')}`);
+          
+        } catch (error) {
+          console.log(`❌ ${file}: CORS Error - ${error.message}`);
+          
+          // Provide helpful suggestions
+          if (error.message.includes('CORS') || error.name === 'TypeError') {
+            console.log(`💡 Suggestion: Configure CORS on S3 bucket to allow origin: ${window.location.origin}`);
+          }
+        }
+      }
     }
 
     // Nuovo metodo per catturare l'output durante la compilazione
@@ -881,7 +929,10 @@ const API = (function () {
 
     async getModule(name) {
       // If already cached, return immediately
-      if (this.moduleCache[name]) return this.moduleCache[name];
+      if (this.moduleCache[name]) {
+        console.log(`✅ Using cached module: ${name}`);
+        return this.moduleCache[name];
+      }
       
       // Check if we have a preload promise for this module
       if (this.preloadPromises[name]) {
@@ -903,11 +954,83 @@ const API = (function () {
         }
       }
       
-      // Fall back to normal loading with user feedback
-      const module = await this.hostLogAsync(`Fetching and compiling ${name}`,
-        this.compileStreaming(name));
-      this.moduleCache[name] = module;
-      return module;
+      // Try CDN first, then local fallback
+      return await this.loadModuleWithFallback(name);
+    }
+
+    // CDN-aware module loading with fallback
+    async loadModuleWithFallback(name) {
+      const urls = this.getModuleUrls(name);
+      
+      for (const { url, source } of urls) {
+        try {
+          const start = performance.now();
+          console.log(`🌐 Attempting to load ${name} from ${source}: ${url}`);
+          this.hostLog(`Loading ${name} from ${source}...`);
+          
+          const response = await fetch(url);
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          
+          const buffer = await response.arrayBuffer();
+          const module = await WebAssembly.compile(buffer);
+          
+          const loadTime = ((performance.now() - start) / 1000).toFixed(2);
+          const sizeMB = (buffer.byteLength / 1024 / 1024).toFixed(1);
+          this.hostWrite(` done. (${sizeMB}MB in ${loadTime}s from ${source})\n`);
+          console.log(`✅ Loaded ${name} from ${source} in ${loadTime}s (${sizeMB}MB)`);
+          
+          // Cache the result
+          this.moduleCache[name] = module;
+          return module;
+          
+        } catch (error) {
+          console.log("SONO QI")
+          console.log(error.message)
+          // const isCorsError = error.message.includes('CORS') || 
+          //                    error.message.includes('cross-origin') ||
+          //                    error.name === 'TypeError';
+          
+          // if (isCorsError && source === 'CDN') {
+          //   this.hostWrite(` CORS error from ${source}.\n`);
+          //   console.warn(`🚫 CORS error loading ${name} from CDN. Check S3/CloudFront CORS settings.`);
+          // } else {
+          //   this.hostWrite(` failed from ${source}.\n`);
+          //   console.warn(`❌ Failed to load ${name} from ${source}:`, error.message);
+          // }
+          continue;
+        }
+      }
+      
+      throw new Error(`Failed to load module ${name} from all sources`);
+    }
+
+    // Get prioritized list of URLs for a module
+    getModuleUrls(name) {
+      const urls = [];
+      
+      // CDN URL (primary)
+      if (this.cdnConfig.enabled) {
+        // Remove trailing slash from baseUrl and leading slash from name to avoid double slashes
+        const baseUrl = this.cdnConfig.baseUrl.replace(/\/$/, '');
+        const fileName = name.replace(/^\//, '');
+        
+        urls.push({
+          url: `${baseUrl}/${fileName}`,
+          source: 'CDN'
+        });
+      }
+      
+      // Local fallback
+      if (this.cdnConfig.fallbackToLocal) {
+        urls.push({
+          url: `/${name}`,
+          source: 'Local'
+        });
+      }
+      
+      return urls;
     }
 
     async untar(memfs, filename) {

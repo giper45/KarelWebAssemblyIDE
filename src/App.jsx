@@ -503,11 +503,15 @@ function App() {
             lld: 'lld',
             memfs: 'memfs',
             sysroot: 'sysroot.tar',
-            enablePreloading: true // Enable background preloading
+            enablePreloading: true, // Enable background preloading
+            useCDN: true, // Enable CDN usage
+            cdnBaseUrl: 'https://d2o62kqzkq27yu.cloudfront.net/',
+            fallbackToLocal: true // Enable local fallback if CDN fails
           })
 
           apiRef.current = api
           setTerminalOutput(prev => prev + 'WebAssembly API initialized.\n')
+          setTerminalOutput(prev => prev + '🌐 Using AWS S3 CDN for faster module loading...\n')
           setTerminalOutput(prev => prev + '📦 Background preloading compiler modules for faster first run...\n')
           
           // Monitor preloading status
