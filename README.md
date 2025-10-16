@@ -7,7 +7,7 @@
 A modern, web-based integrated development environment for learning programming with Karel the Robot using C and WebAssembly.
 
 Demo here:
-https://karel-webassembly.netlify.app/
+https://karel.comics.unina.it
 
 ## 🤖 About Karel
 
