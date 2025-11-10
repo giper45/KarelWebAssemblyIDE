@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.1.3] - 2025-11-10
+### Fixed
+- Fixed Karel error handling to properly stop execution on errors (move, pick_beeper, put_beeper)
+- Error messages now display immediately using real printf instead of buffered output
+- Added global error flag to prevent further actions after an error occurs
+- Clear action buffer when errors are detected to stop infinite loops
+
+### Added
+- Makefile target `karel-invalidate-cache` for CloudFront CDN cache invalidation
+
 ## [1.1.2] - 2025-10-09
 ### Fixed
 - Beeper -> Beepers in the canvas.

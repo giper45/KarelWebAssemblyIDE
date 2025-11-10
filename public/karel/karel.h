@@ -10,6 +10,11 @@
 #define KAREL_ERROR_START "\n\x1b[91m[KAREL_ERROR]"
 #define KAREL_ERROR_END "\x1b[0m\n"
 
+static bool karel_error_occurred = false;
+
+
+
+
 // Auto-flush printf for real-time output in WebAssembly
 #ifdef __EMSCRIPTEN__
     #define printf(...) do { printf(__VA_ARGS__); fflush(stdout); } while(0)
@@ -413,6 +418,10 @@ static inline bool karel_buffer_dequeue(KarelAction* action) {
 }
 
 static inline void karel_buffer_enqueue_action(KarelActionType action_type) {
+    if (karel_error_occurred)
+        return;     
+
+
     if (karel_unified_buffer.count >= KAREL_UNIFIED_BUFFER_SIZE) {
         karel_setup_printf(KAREL_ERROR_START " Karel action buffer is full!!! Are you doing an infinite loop?" KAREL_ERROR_END);
         return;
@@ -456,6 +465,7 @@ static inline void karel_internal_init_state() {
     karel.y = 1;
     karel.direction = 0; // Facing East
     karel.bag_beepers = 10;
+    karel_error_occurred = false;
 
     // Initialize world without beepers
     for (int i = 0; i <= WORLD_WIDTH; i++) {
@@ -521,7 +531,21 @@ static inline void karel_execute_action(KarelAction action) {
                 case 3: karel.y--; break; // South
                 }
             } else {
+                // Use real printf to show error immediately
+                #undef printf
+                #ifdef __EMSCRIPTEN__
+                    #define printf(...) do { printf(__VA_ARGS__); fflush(stdout); } while(0)
+                #elif defined(__wasm__) || defined(__wasm32__)
+                    #define printf(...) do { printf(__VA_ARGS__); fflush(stdout); } while(0)
+                #endif
                 printf(KAREL_ERROR_START " Karel cannot move forward due to walls or boundaries!!!" KAREL_ERROR_END);
+                #undef printf
+                #define printf(...) karel_buffer_enqueue_log(__VA_ARGS__)                
+                
+                karel_error_occurred = true; 
+                karel_unified_buffer.count = 0; // Clear the unified buffer to stop further actions
+                karel_unified_buffer.front = 0;
+                karel_unified_buffer.rear = 0;
             }
             break;
             
@@ -534,7 +558,20 @@ static inline void karel_execute_action(KarelAction action) {
                 karel.beepers[karel.x][karel.y] = false;
                 karel.bag_beepers++;
             } else {
+                #undef printf
+                #ifdef __EMSCRIPTEN__
+                    #define printf(...) do { printf(__VA_ARGS__); fflush(stdout); } while(0)
+                #elif defined(__wasm__) || defined(__wasm32__)
+                    #define printf(...) do { printf(__VA_ARGS__); fflush(stdout); } while(0)
+                #endif
                 printf(KAREL_ERROR_START " Karel cannot pick up a beeper because there are none at the current position!!!" KAREL_ERROR_END);
+                #undef printf
+                #define printf(...) karel_buffer_enqueue_log(__VA_ARGS__)                
+
+                karel_error_occurred = true; 
+                karel_unified_buffer.count = 0; // Clear the unified buffer to stop further actions
+                karel_unified_buffer.front = 0;
+                karel_unified_buffer.rear = 0;
             }
             break;
             
@@ -543,7 +580,20 @@ static inline void karel_execute_action(KarelAction action) {
                 karel.beepers[karel.x][karel.y] = true;
                 karel.bag_beepers--;
             } else {
+                #undef printf
+                #ifdef __EMSCRIPTEN__
+                    #define printf(...) do { printf(__VA_ARGS__); fflush(stdout); } while(0)
+                #elif defined(__wasm__) || defined(__wasm32__)
+                    #define printf(...) do { printf(__VA_ARGS__); fflush(stdout); } while(0)
+                #endif
                 printf(KAREL_ERROR_START " Karel cannot put down a beeper because the bag is empty!!!" KAREL_ERROR_END);
+                #undef printf
+                #define printf(...) karel_buffer_enqueue_log(__VA_ARGS__)
+
+                karel_error_occurred = true; 
+                karel_unified_buffer.count = 0; // Clear the unified buffer to stop further actions
+                karel_unified_buffer.front = 0;
+                karel_unified_buffer.rear = 0;
             }
             break;
     }
@@ -557,6 +607,9 @@ static inline void karel_process_next_action() {
 }
 
 static inline void karel_process_action_log() {
+    if (karel_error_occurred)
+        return;
+
     if (karel_unified_buffer.count > 0) {
         KarelUnifiedBufferEntry* entry = &karel_unified_buffer.entries[karel_unified_buffer.front];
     if (entry->type == KAREL_BUFFER_ACTION) {
